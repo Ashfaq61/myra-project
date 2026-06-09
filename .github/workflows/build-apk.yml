@@ -19,7 +19,7 @@ jobs:
 
     - name: Initialize and Build Perfect Android Structure
       run: |
-        # تمام ضروری فولڈرز ایک ساتھ بنانا
+        # فولڈرز کی درست بناوٹ
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
         mkdir -p app/src/main/res/layout
@@ -114,11 +114,11 @@ jobs:
         </resources>
         EOF
 
-        # 8. خوبصورت اسکرین لے آؤٹ بنانا (activity_main.xml)
+        # 8. بالکل درست اسکرین لے آؤٹ (ٹائپو فکسڈ)
         cat <<EOF > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="match_match"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#121212"
             android:gravity="center">
@@ -134,7 +134,7 @@ jobs:
         </RelativeLayout>
         EOF
 
-        # 9. مین جاوا فائل (اب لے آؤٹ کو کامیابی سے لوڈ کرے گی)
+        # 9. مین جاوا فائل
         cat <<EOF > app/src/main/java/com/myra/assistant/MainActivity.java
         package com.myra.assistant;
         import android.os.Bundle;
@@ -144,7 +144,6 @@ jobs:
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
-                // ایپ کو لے آؤٹ اسکرین کے ساتھ جوڑنا تاکہ کریش نہ ہو
                 setContentView(R.layout.activity_main);
             }
         }
