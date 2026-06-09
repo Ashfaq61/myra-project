@@ -17,12 +17,6 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Accept Android SDK Licenses
-      run: |
-        mkdir -p ${ANDROID_HOME}/licenses
-        echo -e "\n896414b4b1e74d00b9d5e763162d2d866124d0d1" > ${ANDROID_HOME}/licenses/android-sdk-license
-        echo -e "\n24333f1a63b682509d31d0ef9841ee10d0757a02" > ${ANDROID_HOME}/licenses/android-sdk-preview-license
-
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
