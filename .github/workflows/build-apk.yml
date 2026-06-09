@@ -17,16 +17,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Clean and Build APK with Gradle
+    - name: Build APK with Gradle
       run: |
-        # گٹ ہب کلاؤڈ کو ہر حال میں گریڈل فائل ڈھونڈنے میں مدد کرنے کے لیے فولڈرز کی تلاشی
-        if [ -d "android" ]; then cd android; fi
-        if [ -d "Android" ]; then cd Android; fi
-        
-        # پرمیشن سیٹ کرنا اور بلڈ رن کرنا
-        chmod +x gradlew || true
-        ./gradlew clean assembleDebug --stacktrace
-        
+        chmod +x gradlew
+        ./gradlew assembleDebug --stacktrace
+
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
