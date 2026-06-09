@@ -19,21 +19,22 @@ jobs:
 
     - name: Initialize and Build Perfect Android Structure
       run: |
-        # پروجیکٹ کے بنیادی روٹ فولڈرز بنانا
+        # تمام ضروری فولڈرز ایک ساتھ بنانا
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
+        mkdir -p app/src/main/res/layout
 
-        # 1. اینڈرائیڈ ایس ڈی کے پاتھ کی فائل (local.properties)
+        # 1. لوکل ایس ڈی کے پاتھ کی فائل
         echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-        # 2. گریڈل میموری کی فائل (gradle.properties)
+        # 2. گریڈل کی پراپرٹیز فائل
         cat <<EOF > gradle.properties
         org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
         android.useAndroidX=true
         android.enableJetifier=true
         EOF
 
-        # 3. روٹ لیول کی settings.gradle بنانا
+        # 3. روٹ لیول کی settings.gradle
         cat <<EOF > settings.gradle
         pluginManagement {
             repositories {
@@ -53,14 +54,14 @@ jobs:
         include ':app'
         EOF
 
-        # 4. روٹ لیول کی build.gradle بنانا
+        # 4. روٹ لیول کی build.gradle
         cat <<EOF > build.gradle
         plugins {
             id 'com.android.application' version '8.2.0' apply false
         }
         EOF
 
-        # 5. ایپ لیول کی build.gradle بنانا
+        # 5. ایپ لیول کی build.gradle
         cat <<EOF > app/build.gradle
         plugins {
             id 'com.android.application'
@@ -89,7 +90,7 @@ jobs:
         }
         EOF
 
-        # 6. مینی فیسٹ فائل بنانا
+        # 6. مینی فیسٹ فائل
         cat <<EOF > app/src/main/AndroidManifest.xml
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <application
@@ -106,14 +107,34 @@ jobs:
         </manifest>
         EOF
 
-        # 7. اسٹائل فائل بنانا
+        # 7. اسٹائل فائل
         cat <<EOF > app/src/main/res/values/styles.xml
         <resources>
             <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar"/>
         </resources>
         EOF
 
-        # 8. مین جاوا فائل بنانا
+        # 8. خوبصورت اسکرین لے آؤٹ بنانا (activity_main.xml)
+        cat <<EOF > app/src/main/res/layout/activity_main.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_match"
+            android:layout_height="match_parent"
+            android:background="#121212"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MYRA AI ASSISTANT\n\nWelcome Ishfaq!"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center"/>
+        </RelativeLayout>
+        EOF
+
+        # 9. مین جاوا فائل (اب لے آؤٹ کو کامیابی سے لوڈ کرے گی)
         cat <<EOF > app/src/main/java/com/myra/assistant/MainActivity.java
         package com.myra.assistant;
         import android.os.Bundle;
@@ -123,6 +144,8 @@ jobs:
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
+                // ایپ کو لے آؤٹ اسکرین کے ساتھ جوڑنا تاکہ کریش نہ ہو
+                setContentView(R.layout.activity_main);
             }
         }
         EOF
