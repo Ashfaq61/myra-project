@@ -16,21 +16,14 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+        cache: 'gradle'
 
-    - name: Setup Gradle (No Cache Mode)
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: 8.4
-        cache-disabled: true
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-    - name: Clean and Build APK
+    - name: Build with Gradle
       run: |
         chmod +x gradlew
-        ./gradlew clean
         ./gradlew assembleDebug --no-daemon --stacktrace
-
-    - name: Upload Finished APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: MYRA-Fixed-APK
-        path: "**/build/outputs/apk/debug/*.apk"
+      env:
+        JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
