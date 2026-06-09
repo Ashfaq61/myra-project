@@ -1,4 +1,4 @@
-name: Build Myra APK
+name: Build Android APK
 
 on:
   workflow_dispatch:
@@ -14,17 +14,19 @@ jobs:
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
         distribution: 'temurin'
+        java-version: '17'
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Build with Gradle
-      run: ./gradlew assembleDebug
+    - name: Change to Android Directory and Build APK
+      run: |
+        if [ -d "android" ]; then
+          cd android
+        fi
+        chmod +x gradlew
+        ./gradlew assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Myra-Assistant-APK
-        path: app/build/outputs/apk/debug/*.apk
+        path: "**/build/outputs/apk/debug/*.apk"
