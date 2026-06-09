@@ -17,15 +17,17 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Change to Android Directory and Build APK
+    - name: Clean and Build APK with Gradle
       run: |
-        if [ -d "android" ]; then
-          cd android
-        fi
-        chmod +x gradlew
-        ./gradlew assembleDebug
-
-    - name: Upload APK Artifact
+        # گٹ ہب کلاؤڈ کو ہر حال میں گریڈل فائل ڈھونڈنے میں مدد کرنے کے لیے فولڈرز کی تلاشی
+        if [ -d "android" ]; then cd android; fi
+        if [ -d "Android" ]; then cd Android; fi
+        
+        # پرمیشن سیٹ کرنا اور بلڈ رن کرنا
+        chmod +x gradlew || true
+        ./gradlew clean assembleDebug --stacktrace
+        
+    - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: Myra-Assistant-APK
