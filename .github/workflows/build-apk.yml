@@ -129,9 +129,12 @@ jobs:
         gradle-version: 8.2
         cache-disabled: true
 
-    - name: Build APK with Gradle
+    - name: Build APK with Gradle Wrapper
       run: |
-        gradle assembleDebug --no-daemon --stacktrace
+        # کلاؤڈ رنر کے لیے لوکل گریڈل لائف سائیکل کو کال کرنا
+        gradle wrapper --gradle-version 8.2
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-daemon --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
