@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build MYRA APK
 
 on:
   workflow_dispatch:
@@ -17,18 +17,25 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: Accept Android SDK Licenses
+      run: |
+        mkdir -p ${ANDROID_HOME}/licenses
+        echo -e "\n896414b4b1e74d00b9d5e763162d2d866124d0d1" > ${ANDROID_HOME}/licenses/android-sdk-license
+        echo -e "\n24333f1a63b682509d31d0ef9841ee10d0757a02" > ${ANDROID_HOME}/licenses/android-sdk-preview-license
+
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: 8.2
+        gradle-version: 8.4
 
     - name: Clean and Build APK
       run: |
-        gradle clean
-        gradle assembleDebug --stacktrace
+        chmod +x gradlew
+        ./gradlew clean
+        ./gradlew assembleDebug --no-daemon --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
-        name: Myra-Assistant-APK
+        name: MYRA-Fixed-APK
         path: "**/build/outputs/apk/debug/*.apk"
