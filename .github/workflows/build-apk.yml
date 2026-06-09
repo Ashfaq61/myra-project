@@ -17,13 +17,13 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Initialize and Build Perfect Android Structure
+    - name: Generate Automated Android Framework
       run: |
-        # 1. پروجیکٹ کے بنیادی روٹ فولڈرز بنانا
+        # پروجیکٹ کی تمام ڈائریکٹریز ایک ہی بار میں بنانا
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
 
-        # 2. روٹ لیول کی settings.gradle بنانا
+        # 1. درست اور سادہ settings.gradle
         cat <<EOF > settings.gradle
         pluginManagement {
             repositories {
@@ -43,15 +43,14 @@ jobs:
         include ':app'
         EOF
 
-        # 3. روٹ لیول کی build.gradle بنانا
+        # 2. روٹ لیول کی build.gradle
         cat <<EOF > build.gradle
         plugins {
             id 'com.android.application' version '8.2.0' apply false
-            id 'com.android.library' version '8.2.0' apply false
         }
         EOF
 
-        # 4. ایپ لیول کی build.gradle بنانا
+        # 3. ایپ لیول کی build.gradle
         cat <<EOF > app/build.gradle
         plugins {
             id 'com.android.application'
@@ -68,16 +67,6 @@ jobs:
                 versionCode 1
                 versionName "1.0"
             }
-
-            buildTypes {
-                release {
-                    minifyEnabled false
-                }
-            }
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_17
-                targetCompatibility JavaVersion.VERSION_17
-            }
         }
 
         dependencies {
@@ -85,7 +74,7 @@ jobs:
         }
         EOF
 
-        # 5. مینی فیسٹ فائل بنانا
+        # 4. مینی فیسٹ فائل
         cat <<EOF > app/src/main/AndroidManifest.xml
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <application
@@ -102,14 +91,14 @@ jobs:
         </manifest>
         EOF
 
-        # 6. اسٹائل فائل بنانا
+        # 5. اسٹائلز فائل
         cat <<EOF > app/src/main/res/values/styles.xml
         <resources>
             <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar"/>
         </resources>
         EOF
 
-        # 7. مین جاوا فائل بنانا
+        # 6. مین جاوا ایکٹیویٹی
         cat <<EOF > app/src/main/java/com/myra/assistant/MainActivity.java
         package com.myra.assistant;
         import android.os.Bundle;
@@ -123,18 +112,17 @@ jobs:
         }
         EOF
 
-    - name: Setup Gradle
+    - name: Setup Gradle Cloud Engine
       uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: 8.2
         cache-disabled: true
 
-    - name: Build APK with Gradle Wrapper
+    - name: Build and Force Compile APK
       run: |
-        # کلاؤڈ رنر کے لیے لوکل گریڈل لائف سائیکل کو کال کرنا
         gradle wrapper --gradle-version 8.2
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --stacktrace
+        ./gradlew :app:assembleDebug --no-daemon --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
