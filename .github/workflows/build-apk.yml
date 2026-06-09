@@ -17,16 +17,77 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Fix Android Directory Structure
+    - name: Initialize and Build Perfect Android Structure
       run: |
+        # 1. پروجیکٹ کے بنیادی روٹ فولڈرز بنانا
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
-        mkdir -p app/src/main/res/layout
 
-        # مینی فیسٹ فائل کا درست ڈھانچہ
+        # 2. روٹ لیول کی settings.gradle بنانا
+        cat <<EOF > settings.gradle
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        rootProject.name = "MyraAssistant"
+        include ':app'
+        EOF
+
+        # 3. روٹ لیول کی build.gradle بنانا
+        cat <<EOF > build.gradle
+        plugins {
+            id 'com.android.application' version '8.2.0' apply false
+            id 'com.android.library' version '8.2.0' apply false
+        }
+        EOF
+
+        # 4. ایپ لیول کی build.gradle بنانا
+        cat <<EOF > app/build.gradle
+        plugins {
+            id 'com.android.application'
+        }
+
+        android {
+            namespace 'com.myra.assistant'
+            compileSdk 34
+
+            defaultConfig {
+                applicationId "com.myra.assistant"
+                minSdk 24
+                targetSdk 34
+                versionCode 1
+                versionName "1.0"
+            }
+
+            buildTypes {
+                release {
+                    minifyEnabled false
+                }
+            }
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
+
+        dependencies {
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+        }
+        EOF
+
+        # 5. مینی فیسٹ فائل بنانا
         cat <<EOF > app/src/main/AndroidManifest.xml
-        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-            package="com.myra.assistant">
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <application
                 android:allowBackup="true"
                 android:label="MYRA"
@@ -41,14 +102,14 @@ jobs:
         </manifest>
         EOF
 
-        # تھیم اور اسٹائل کی فائل
+        # 6. اسٹائل فائل بنانا
         cat <<EOF > app/src/main/res/values/styles.xml
         <resources>
-            <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar" />
+            <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar"/>
         </resources>
         EOF
 
-        # مین جاوا فائل (سینٹیکس بالکل درست کر دیا گیا ہے)
+        # 7. مین جاوا فائل بنانا
         cat <<EOF > app/src/main/java/com/myra/assistant/MainActivity.java
         package com.myra.assistant;
         import android.os.Bundle;
@@ -65,19 +126,15 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: 8.4
+        gradle-version: 8.2
         cache-disabled: true
 
     - name: Build APK with Gradle
       run: |
-        chmod +x gradlew
-        ./gradlew clean
-        ./gradlew assembleDebug --no-daemon --stacktrace
-      env:
-        JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
+        gradle assembleDebug --no-daemon --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: MYRA-Final-APK
-        path: "**/build/outputs/apk/debug/*.apk"
+        path: "app/build/outputs/apk/debug/*.apk"
