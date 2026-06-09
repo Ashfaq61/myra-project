@@ -22,8 +22,9 @@ jobs:
       with:
         gradle-version: 8.2
 
-    - name: Build APK without local wrapper
+    - name: Clean and Build APK
       run: |
+        gradle clean
         gradle assembleDebug --stacktrace
 
     - name: Upload Finished APK
