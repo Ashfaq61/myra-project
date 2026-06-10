@@ -17,7 +17,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Initialize and Build Perfect Android Structure
+    - name: Initialize and Build Safe Android Structure
       run: |
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
@@ -80,7 +80,8 @@ jobs:
         }
 
         dependencies {
-            implementation 'androidx.appcompat:appcompat:1.6.1'
+            // بالکل بنیادی اینڈرائیڈ لائبریری جو کبھی کریش نہیں ہوتی
+            implementation 'androidx.core:core:1.12.0'
         }
         EOF
 
@@ -89,7 +90,7 @@ jobs:
             <application
                 android:allowBackup="true"
                 android:label="MYRA"
-                android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+                android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
                 <activity android:name=".MainActivity" android:exported="true">
                     <intent-filter>
                         <action android:name="android.intent.action.MAIN" />
@@ -100,40 +101,46 @@ jobs:
         </manifest>
         EOF
 
-        cat <<EOF > app/src/main/res/values/styles.xml
-        <resources>
-            <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar"/>
-        </resources>
-        EOF
-
         cat <<EOF > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
-        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#121212"
+            android:background="#000000"
+            android:orientation="vertical"
             android:gravity="center">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="MYRA AI ASSISTANT\n\nWelcome Ishfaq!"
+                android:text="MYRA AI ASSISTANT"
                 android:textColor="#FFFFFF"
-                android:textSize="24sp"
+                android:textSize="26sp"
                 android:textStyle="bold"
                 android:gravity="center"/>
-        </RelativeLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Welcome Ishfaq!"
+                android:textColor="#00FF00"
+                android:textSize="20sp"
+                **android:gravity="center"**/>
+        </LinearLayout>
         EOF
 
         cat <<EOF > app/src/main/java/com/myra/assistant/MainActivity.java
         package com.myra.assistant;
+        import android.app.Activity;
         import android.os.Bundle;
-        import androidx.appcompat.app.AppCompatActivity;
 
-        public class MainActivity extends AppCompatActivity {
+        // بالکل سادہ جاوا کوڈ بغیر کسی بیرونی کریش کے
+        public class MainActivity extends Activity {
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
+                setComponentModel(savedInstanceState);
                 setContentView(R.layout.activity_main);
             }
         }
@@ -149,19 +156,14 @@ jobs:
       run: |
         gradle wrapper --gradle-version 8.2
         chmod +x gradlew
-        ./gradlew :app:assembleDebug --no-daemon --stacktrace
+        ./gradlew :app:assembleDebug --no-daemon
         cp app/build/outputs/apk/debug/app-debug.apk myra-assistant.apk
-
-    - name: Delete Old Release tags
-      run: |
-        gh release delete v1.0 --yes || true
-        git push origin :refs/tags/v1.0 || true
 
     - name: Create Direct APK Download Link (Release)
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1.0
-        name: "MYRA Assistant New Build"
+        tag_name: v${{ github.run_number }}
+        name: "MYRA Assistant Build v${{ github.run_number }}"
         files: myra-assistant.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
