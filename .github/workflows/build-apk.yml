@@ -22,6 +22,7 @@ jobs:
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
         mkdir -p app/src/main/res/layout
+        mkdir -p app/src/main/res/drawable
 
         echo "sdk.dir=$ANDROID_HOME" > local.properties
 
@@ -101,52 +102,88 @@ jobs:
         </manifest>
         EOF
 
+        # Glow Effect Shape for Aura
+        cat <<EOF > app/src/main/res/drawable/glow_circle.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <shape xmlns:android="http://schemas.android.com/apk/res/android"
+            android:shape="oval">
+            <solid android:color="#3300E5FF"/>
+            <stroke android:width="4dp" android:color="#00E5FF"/>
+            <size android:width="180dp" android:height="180dp"/>
+        </shape>
+        EOF
+
+        # Mic Button Shape
+        cat <<EOF > app/src/main/res/drawable/mic_bg.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <shape xmlns:android="http://schemas.android.com/apk/res/android"
+            android:shape="oval">
+            <solid android:color="#1E1E24"/>
+            <stroke android:width="2dp" android:color="#00E5FF"/>
+            <size android:width="80dp" android:height="80dp"/>
+        </shape>
+        EOF
+
+        # Futuristic Video-like Layout
         cat <<EOF > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#121212"
+            android:background="#0A0B10"
             android:padding="20dp">
 
             <TextView
                 android:id="@+id/titleText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="MYRA AI ASSISTANT"
-                android:textColor="#FFFFFF"
-                android:textSize="24sp"
+                android:text="M Y R A"
+                android:textColor="#00E5FF"
+                android:textSize="28sp"
                 android:textStyle="bold"
+                android:letterSpacing="0.3"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="20dp"/>
+                android:layout_marginTop="30dp"/>
+
+            <FrameLayout
+                android:id="@+id/auraContainer"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_centerInParent="true">
+                
+                <View
+                    android:id="@+id/auraGlow"
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/glow_circle"/>
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/statusText"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_below="@id/titleText"
-                android:layout_above="@+id/micButton"
-                android:layout_marginTop="30dp"
-                android:layout_marginBottom="30dp"
-                android:text="MYRA: جی اشفاق بھائی، مائرہ حاضر ہے! نیچے مائیک والے بٹن پر کلک کریں اور مجھ سے بات کریں۔"
-                android:textColor="#00FF00"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/auraContainer"
+                android:layout_marginTop="20dp"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:text="MYRA: Assalam-o-Alaikum Ishfaq Bhai. I am listening."
+                android:textColor="#8A90A6"
                 android:textSize="18sp"
                 android:gravity="center"
-                android:scrollbars="vertical"/>
+                android:lineSpacingMultiplier="1.2"/>
 
             <Button
                 android:id="@+id/micButton"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
+                android:layout_width="85dp"
+                android:layout_height="85dp"
                 android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
                 android:layout_marginBottom="40dp"
-                android:text="🎤\nبولیں"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF"
-                android:background="@android:drawable/btn_default"
-                android:backgroundTint="#1E88E5"/>
+                android:text="🎤"
+                android:textSize="32sp"
+                android:background="@drawable/mic_bg"
+                android:textColor="#00E5FF"/>
 
         </RelativeLayout>
         EOF
@@ -162,6 +199,8 @@ jobs:
         import android.speech.SpeechRecognizer;
         import android.speech.tts.TextToSpeech;
         import android.view.View;
+        import android.view.animation.Animation;
+        import android.view.animation.ScaleAnimation;
         import android.widget.Button;
         import android.widget.TextView;
         import java.util.ArrayList;
@@ -171,6 +210,7 @@ jobs:
 
             private TextView statusText;
             private Button micButton;
+            private View auraGlow;
             private SpeechRecognizer speechRecognizer;
             private TextToSpeech tts;
             private boolean isListening = false;
@@ -182,46 +222,60 @@ jobs:
 
                 statusText = findViewById(R.id.statusText);
                 micButton = findViewById(R.id.micButton);
+                auraGlow = findViewById(R.id.auraGlow);
 
+                // Initialize Text to Speech Engine
                 tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
                     @Override
                     public void onInit(int status) {
                         if (status == TextToSpeech.SUCCESS) {
                             tts.setLanguage(new Locale("ur", "PK"));
-                            speak("جی اشفاق بھائی، مائرہ ایکٹو ہو چکی ہے۔ فرمائیے، میں آپ کی کیا مدد کروں؟");
+                            speak("جی اشفاق بھائی، مائرہ حاضر ہے۔ فرمائیے؟");
                         }
                     }
                 });
 
+                // Setup Speech Recognition Engine
                 speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
                 final Intent speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                 speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ur-PK");
-                speechIntent.putExtra(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES, "en-US");
 
                 speechRecognizer.setRecognitionListener(new RecognitionListener() {
                     @Override
                     public void onReadyForSpeech(Bundle params) {
-                        statusText.setText("MYRA: میں سن رہی ہوں، بولیں اشفاق بھائی...");
+                        statusText.setText("MYRA: Listening carefully...");
+                        startAuraAnimation(1.0f, 1.3f, Animation.INFINITE);
                     }
 
                     @Override
                     public void onBeginningOfSpeech() {}
+                    
                     @Override
-                    public void onRmsChanged(float rmsdB) {}
+                    public void onRmsChanged(float rmsdB) {
+                        // Dynamic wave scaling response to loudness
+                        float scale = 1.0f + (rmsdB / 10.0f);
+                        if(scale > 1.8f) scale = 1.8f;
+                        auraGlow.setScaleX(scale);
+                        auraGlow.setScaleY(scale);
+                    }
+
                     @Override
                     public void onBufferReceived(byte[] buffer) {}
+                    
                     @Override
                     public void onEndOfSpeech() {
                         isListening = false;
-                        micButton.setText("🎤\nبولیں");
+                        micButton.setText("🎤");
+                        auraGlow.clearAnimation();
                     }
 
                     @Override
                     public void onError(int error) {
-                        statusText.setText("MYRA: معذرت، میں آپ کی آواز صحیح طرح سن نہیں سکی۔ دوبارہ کوشش کریں!");
+                        statusText.setText("MYRA: Aawaz clear nahi aayi. Dubara mic tap karein.");
                         isListening = false;
-                        micButton.setText("🎤\nبولیں");
+                        micButton.setText("🎤");
+                        auraGlow.clearAnimation();
                     }
 
                     @Override
@@ -229,7 +283,7 @@ jobs:
                         ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                         if (matches != null && matches.size() > 0) {
                             String userQuery = matches.get(0);
-                            processUserCommand(userQuery);
+                            processCustomPrompt(userQuery);
                         }
                     }
 
@@ -246,38 +300,53 @@ jobs:
                             if (!isListening) {
                                 speechRecognizer.startListening(speechIntent);
                                 isListening = true;
-                                micButton.setText("🛑\nروکیں");
+                                micButton.setText("🛑");
                             } else {
                                 speechRecognizer.stopListening();
                                 isListening = false;
-                                micButton.setText("🎤\nبولیں");
+                                micButton.setText("🎤");
+                                auraGlow.clearAnimation();
                             }
                         } catch (Exception e) {
-                            statusText.setText("Error: " + e.getMessage());
+                            statusText.setText("System Error: " + e.getMessage());
                         }
                     }
                 });
             }
 
-            // مائرہ کے پرامپٹ کی کسٹم لاجک اور پرسنالٹی
-            private void processUserCommand(String command) {
+            // Pulse Animation Logic for Futuristic Aura UI
+            private void startAuraAnimation(float from, float to, int repeatCount) {
+                ScaleAnimation pulse = new ScaleAnimation(
+                        from, to, from, to,
+                        Animation.RELATIVE_TO_SELF, 0.5f,
+                        Animation.RELATIVE_TO_SELF, 0.5f
+                );
+                pulse.setDuration(600);
+                pulse.setRepeatMode(Animation.REVERSE);
+                pulse.setRepeatCount(repeatCount);
+                auraGlow.startAnimation(pulse);
+            }
+
+            // Processing Prompt commands with custom responses
+            private void processCustomPrompt(String command) {
                 String response = "";
                 String lowerCommand = command.toLowerCase();
 
-                if (lowerCommand.contains("hello") || lowerCommand.contains("سلام") || lowerCommand.contains("assalam")) {
-                    response = "وعلیکم السلام اشفاق بھائی! کیا حال چال ہیں آپ کے؟";
-                } else if (lowerCommand.contains("kaun ho") || lowerCommand.contains("who are you") || lowerCommand.contains("نام کیا ہے")) {
-                    response = "میں مائرہ ہوں، آپ کی پرسنل کسٹم اے آئی اسسٹنٹ جس کو آپ نے خود ڈیزائن کیا ہے۔";
-                } else if (lowerCommand.contains("kaise ho") || lowerCommand.contains("how are you")) {
-                    response = "الحمدللہ اشفاق بھائی، میں بالکل ٹھیک ٹھاک اور آپ کے احکامات بجا لانے کے لیے تیار ہوں۔";
-                } else if (lowerCommand.contains("shukriya") || lowerCommand.contains("thank you")) {
-                    response = "کوئی بات نہیں اشفاق بھائی، یہ تو میرا فرض ہے۔";
+                if (lowerCommand.contains("hello") || lowerCommand.contains("سلام")) {
+                    response = "وعلیکم السلام اشفاق بھائی! فرمائیے، مائرہ حاضر ہے۔";
+                } else if (lowerCommand.contains("kaun ho") || lowerCommand.contains("who are you")) {
+                    response = "میں مائرhe ہوں، آپ کی پرسنل ایڈوانسڈ اے آئی اسسٹنٹ۔";
+                } else if (lowerCommand.contains("theek ho") || lowerCommand.contains("how are you")) {
+                    response = "الحمدللہ اشfaq بھائی، میں بالکل ٹھیک۔ آپ سنائیں؟";
                 } else {
-                    response = "آپ نے فرمایا: \"" + command + "\"। میں اس کمانڈ پر مزید کام سیکھ رہی ہوں اور جلد ہی فلی ایکٹو ہو جاؤں گی!";
+                    response = "Ji Ishfaq Bhai, maine suna: \"" + command + "\". Is feature par kaam chal raha hai.";
                 }
 
-                statusText.setText("آپ: " + command + "\n\nMYRA: " + response);
+                statusText.setText("MYRA: " + response);
                 speak(response);
+                
+                // Animate aura while speaking response
+                startAuraAnimation(1.0f, 1.2f, 4);
             }
 
             private void speak(String text) {
