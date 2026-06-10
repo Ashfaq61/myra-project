@@ -19,22 +19,18 @@ jobs:
 
     - name: Initialize and Build Perfect Android Structure
       run: |
-        # فولڈرز کی درست بناوٹ
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
         mkdir -p app/src/main/res/layout
 
-        # 1. لوکل ایس ڈی کے پاتھ کی فائل
         echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-        # 2. گریڈل کی پراپرٹیز فائل
         cat <<EOF > gradle.properties
         org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
         android.useAndroidX=true
         android.enableJetifier=true
         EOF
 
-        # 3. روٹ لیول کی settings.gradle
         cat <<EOF > settings.gradle
         pluginManagement {
             repositories {
@@ -54,14 +50,12 @@ jobs:
         include ':app'
         EOF
 
-        # 4. روٹ لیول کی build.gradle
         cat <<EOF > build.gradle
         plugins {
             id 'com.android.application' version '8.2.0' apply false
         }
         EOF
 
-        # 5. ایپ لیول کی build.gradle
         cat <<EOF > app/build.gradle
         plugins {
             id 'com.android.application'
@@ -90,7 +84,6 @@ jobs:
         }
         EOF
 
-        # 6. مینی فیسٹ فائل
         cat <<EOF > app/src/main/AndroidManifest.xml
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
             <application
@@ -107,14 +100,12 @@ jobs:
         </manifest>
         EOF
 
-        # 7. اسٹائل فائل
         cat <<EOF > app/src/main/res/values/styles.xml
         <resources>
             <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar"/>
         </resources>
         EOF
 
-        # 8. بالکل درست اسکرین لے آؤٹ (ٹائپو فکسڈ)
         cat <<EOF > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -134,7 +125,6 @@ jobs:
         </RelativeLayout>
         EOF
 
-        # 9. مین جاوا فائل
         cat <<EOF > app/src/main/java/com/myra/assistant/MainActivity.java
         package com.myra.assistant;
         import android.os.Bundle;
@@ -160,9 +150,18 @@ jobs:
         gradle wrapper --gradle-version 8.2
         chmod +x gradlew
         ./gradlew :app:assembleDebug --no-daemon --stacktrace
+        cp app/build/outputs/apk/debug/app-debug.apk myra-assistant.apk
 
-    - name: Upload Finished APK
-      uses: actions/upload-artifact@v4
+    - name: Delete Old Release tags
+      run: |
+        gh release delete v1.0 --yes || true
+        git push origin :refs/tags/v1.0 || true
+
+    - name: Create Direct APK Download Link (Release)
+      uses: softprops/action-gh-release@v2
       with:
-        name: MYRA-Final-APK
-        path: "app/build/outputs/apk/debug/*.apk"
+        tag_name: v1.0
+        name: "MYRA Assistant New Build"
+        files: myra-assistant.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
