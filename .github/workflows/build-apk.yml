@@ -82,6 +82,7 @@ jobs:
 
         dependencies {
             implementation 'androidx.core:core:1.12.0'
+            implementation 'com.android.volley:volley:1.2.1'
         }
         EOF
 
@@ -259,19 +260,18 @@ jobs:
         import android.content.Intent;
         import android.net.Uri;
         import android.os.Bundle;
-        import android.os.Handler;
         import android.os.IBinder;
-        import android.os.Looper;
         import android.telecom.TelecomManager;
         import android.speech.RecognitionListener;
         import android.speech.RecognizerIntent;
         import android.speech.SpeechRecognizer;
         import android.speech.tts.TextToSpeech;
-        import java.io.BufferedReader;
-        import java.io.InputStreamReader;
-        import java.io.OutputStream;
-        import java.net.HttpURLConnection;
-        import java.net.URL;
+        import com.android.volley.Request;
+        import com.android.volley.RequestQueue;
+        import com.android.volley.toolbox.JsonObjectRequest;
+        import com.android.volley.toolbox.Volley;
+        import org.json.JSONArray;
+        import org.json.JSONObject;
         import java.util.ArrayList;
         import java.util.Locale;
 
@@ -279,15 +279,16 @@ jobs:
             private SpeechRecognizer speechRecognizer;
             private TextToSpeech tts;
             private Intent speechIntent;
-            private final Handler mainHandler = new Handler(Looper.getMainLooper());
+            private RequestQueue requestQueue;
             
-            // آپ کی آفیشل جیمنائی API Key
             private final String GEMINI_API_KEY = "AIzaSyDGFeaG6_MqLDQF2lQ1Sh6vjgmFSy3Y8AE"; 
 
             @Override
             public void onCreate() {
                 super.onCreate();
                 
+                requestQueue = Volley.newRequestQueue(this);
+
                 NotificationChannel channel = new NotificationChannel("myra_gemini", "MYRA Gemini Live", NotificationManager.IMPORTANCE_LOW);
                 getSystemService(NotificationManager.class).createNotificationChannel(channel);
                 Notification notification = new Notification.Builder(this, "myra_gemini").setContentTitle("MYRA Gemini Engine Running").build();
@@ -367,61 +368,58 @@ jobs:
                 }
 
                 if (words.contains("myra") || words.contains("مائرہ") || words.length() > 3) {
-                    queryGeminiPureThread(words);
+                    queryGeminiVolley(words);
                 }
             }
 
-            // فکسڈ نان بلاکنگ خالص تھریڈ انجن (انتہائی ہلکا پھلکا اور 100٪ سکسیس فل بلڈ)
-            private void queryGeminiPureThread(final String userPrompt) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String reply;
-                        try {
-                            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY);
-                            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                            conn.setRequestMethod("POST");
-                            conn.setRequestProperty("Content-Type", "application/json");
-                            conn.setDoOutput(true);
+            // جدید سکیور نیٹ ورک انجن (Volley Engine) جو کریش اور بلڈ فیل کو ہمیشہ کے لیے ختم کر دے گا
+            private void queryGeminiVolley(String userPrompt) {
+                String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY;
 
-                            String systemInstruction = "You are MYRA, a super-smart personal AI assistant created by Ishfaq Bhai. Speak politely in Urdu/English mix. Keep answers short.";
-                            String jsonInputString = "{\"contents\": [{\"parts\":[{\"text\":\"" + systemInstruction + " User says: " + userPrompt + "\"}]}]}";
+                try {
+                    String systemInstruction = "You are MYRA, a super-smart personal AI assistant created by Ishfaq Bhai. Speak politely in Urdu/English mix. Keep answers short.";
+                    
+                    JSONObject textObj = new JSONObject();
+                    textObj.put("text", systemInstruction + " User says: " + userPrompt);
 
-                            try (OutputStream os = conn.getOutputStream()) {
-                                byte[] input = jsonInputString.getBytes("utf-8");
-                                os.write(input, 0, input.length);
-                            }
+                    JSONArray partsArray = new JSONArray();
+                    partsArray.put(textObj);
 
-                            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
-                            StringBuilder response = new StringBuilder();
-                            String responseLine;
-                            while ((responseLine = br.readLine()) != null) {
-                                response.append(responseLine.trim());
-                            }
+                    JSONObject partsObj = new JSONObject();
+                    partsObj.put("parts", partsArray);
 
-                            String rawResponse = response.toString();
-                            if (rawResponse.contains("text\": \"")) {
-                                String cleanText = rawResponse.substring(rawResponse.indexOf("text\": \"") + 8);
-                                cleanText = cleanText.substring(0, cleanText.indexOf("\""));
-                                reply = cleanText.replace("\\\\n", " ").replace("\\\"", "\"");
-                            } else {
-                                reply = "دوبارہ کوشش کریں اشفاق بھائی۔";
-                            }
-                        } catch (Exception e) {
-                            reply = "لائیو کنکشن کا مسئلہ ہے اشفاق بھائی۔";
-                        }
+                    JSONArray contentsArray = new JSONArray();
+                    contentsArray.put(partsObj);
 
-                        final String finalReply = reply;
-                        mainHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
+                    JSONObject jsonBody = new JSONObject();
+                    jsonBody.put("contents", contentsArray);
+
+                    JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                        response -> {
+                            try {
+                                JSONArray candidates = response.getJSONArray("candidates");
+                                JSONObject firstCandidate = candidates.getJSONObject(0);
+                                JSONObject content = firstCandidate.getJSONObject("content");
+                                JSONArray parts = content.getJSONArray("parts");
+                                String aiReply = parts.getJSONObject(0).getString("text");
+
                                 if (tts != null) {
-                                    tts.speak(finalReply, TextToSpeech.QUEUE_FLUSH, null, null);
+                                    tts.speak(aiReply, TextToSpeech.QUEUE_FLUSH, null, null);
                                 }
+                            } catch (Exception e) {
+                                if (tts != null) tts.speak("ڈیٹا پروسیسنگ کا مسئلہ ہے اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
                             }
-                        });
-                    }
-                }).start();
+                        },
+                        error -> {
+                            if (tts != null) tts.speak("لائیو کنکشن کا مسئلہ ہے اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
+                        }
+                    );
+
+                    requestQueue.add(jsonObjectRequest);
+
+                } catch (Exception e) {
+                    if (tts != null) tts.speak("سسٹم انجن ایرر ہے اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
+                }
             }
 
             @Override
