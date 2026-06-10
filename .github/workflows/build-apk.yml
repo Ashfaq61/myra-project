@@ -125,7 +125,7 @@ jobs:
         </manifest>
         EOF
 
-        # چمکتا ہوا آرا رِنگ (Glow Aura Shape)
+        # خوبصورت نیون چمکتا ہوا دائرہ (Aura Shape)
         cat <<EOF > app/src/main/res/drawable/glow_circle.xml
         <?xml version="1.0" encoding="utf-8"?>
         <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
@@ -139,7 +139,7 @@ jobs:
         </shape>
         EOF
 
-        # خوبصورت بٹن شیپ
+        # مائیک بٹن بیک گراؤنڈ
         cat <<EOF > app/src/main/res/drawable/mic_bg.xml
         <?xml version="1.0" encoding="utf-8"?>
         <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
@@ -149,7 +149,7 @@ jobs:
         </shape>
         EOF
 
-        # فائنل خوبصورت نیون اور جدید لے آؤٹ
+        # مکمل نیون ہائی ٹیک لے آؤٹ
         cat <<EOF > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -177,7 +177,7 @@ jobs:
                 android:layout_centerInParent="true">
                 <View
                     android:id="@+id/auraGlow"
-                    android:layout="width="200dp"
+                    android:layout_width="200dp"
                     android:layout_height="200dp"
                     android:layout_gravity="center"
                     android:background="@drawable/glow_circle"/>
@@ -189,7 +189,7 @@ jobs:
                 android:layout_height="wrap_content"
                 android:layout_below="@id/auraContainer"
                 android:layout_marginTop="30dp"
-                android:text="MYRA: جیمنائی لائیو ایکٹو ہے! بولیں اشفاق بھائی..."
+                android:text="MYRA: جیمنائی لائیو کلاؤڈ ایکٹو ہے..."
                 android:textColor="#8A90A6"
                 android:textSize="18sp"
                 android:gravity="center"/>
@@ -258,9 +258,10 @@ jobs:
         import android.content.Context;
         import android.content.Intent;
         import android.net.Uri;
-        import android.os.AsyncTask;
         import android.os.Bundle;
+        import android.os.Handler;
         import android.os.IBinder;
+        import android.os.Looper;
         import android.telecom.TelecomManager;
         import android.speech.RecognitionListener;
         import android.speech.RecognizerIntent;
@@ -273,13 +274,17 @@ jobs:
         import java.net.URL;
         import java.util.ArrayList;
         import java.util.Locale;
+        import java.util.concurrent.ExecutorService;
+        import java.util.concurrent.Executors;
 
         public class MyraBackgroundService extends Service {
             private SpeechRecognizer speechRecognizer;
             private TextToSpeech tts;
             private Intent speechIntent;
+            private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+            private final Handler mainHandler = new Handler(Looper.getMainLooper());
             
-            // آپ کی لائیو اور ویریفائیڈ API Key سیٹ کر دی گئی ہے
+            // آپ کی آفیشل جیمنائی API Key
             private final String GEMINI_API_KEY = "AIzaSyDGFeaG6_MqLDQF2lQ1Sh6vjgmFSy3Y8AE"; 
 
             @Override
@@ -365,15 +370,14 @@ jobs:
                 }
 
                 if (words.contains("myra") || words.contains("مائرہ") || words.length() > 3) {
-                    new GeminiTask().execute(words);
+                    queryGeminiAIModern(words);
                 }
             }
 
-            // فکسڈ کلاؤڈ لسنر انجن (بلڈ فیل اور تھریڈ بلاکنگ سے محفوظ)
-            private class GeminiTask extends AsyncTask<String, Void, String> {
-                @Override
-                protected String doInBackground(String... params) {
-                    String userPrompt = params[0];
+            // فکسڈ نیو ماڈرن کلاؤڈ انجن (انٹرنیٹ بلاکنگ اور بلڈ فیل سے 100٪ محفوظ)
+            private void queryGeminiAIModern(final String userPrompt) {
+                executorService.execute(() -> {
+                    String aiReply = "سسٹم پروسیسنگ چیک کریں اشفاق بھائی۔";
                     try {
                         URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY);
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -398,22 +402,27 @@ jobs:
 
                         String rawResponse = response.toString();
                         if (rawResponse.contains("text\": \"")) {
-                            String aiReply = rawResponse.substring(rawResponse.indexOf("text\": \"") + 8);
-                            aiReply = aiReply.substring(0, aiReply.indexOf("\""));
-                            return aiReply.replace("\\\\n", " ").replace("\\\"", "\"");
+                            String cleanText = rawResponse.substring(rawResponse.indexOf("text\": \"") + 8);
+                            cleanText = cleanText.substring(0, cleanText.indexOf("\""));
+                            aiReply = cleanText.replace("\\\\n", " ").replace("\\\"", "\"");
                         }
                     } catch (Exception e) {
-                        return "نیٹ ورک کنکشن چیک کریں اشفاق بھائی۔";
+                        aiReply = "نیٹ ورک لائیو کنکشن پرابلم ہے اشفاق بھائی۔";
                     }
-                    return null;
-                }
 
-                @Override
-                protected void onPostExecute(String result) {
-                    if (result != null && tts != null) {
-                        tts.speak(result, TextToSpeech.QUEUE_FLUSH, null, null);
-                    }
-                }
+                    final String finalReply = aiReply;
+                    mainHandler.post(() -> {
+                        if (tts != null) {
+                            tts.speak(finalReply, TextToSpeech.QUEUE_FLUSH, null, null);
+                        }
+                    });
+                });
+            }
+
+            @Override
+            public void onDestroy() {
+                super.onDestroy();
+                executorService.shutdown();
             }
 
             @Override
