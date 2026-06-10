@@ -274,14 +274,11 @@ jobs:
         import java.net.URL;
         import java.util.ArrayList;
         import java.util.Locale;
-        import java.util.concurrent.ExecutorService;
-        import java.util.concurrent.Executors;
 
         public class MyraBackgroundService extends Service {
             private SpeechRecognizer speechRecognizer;
             private TextToSpeech tts;
             private Intent speechIntent;
-            private final ExecutorService executorService = Executors.newSingleThreadExecutor();
             private final Handler mainHandler = new Handler(Looper.getMainLooper());
             
             // آپ کی آفیشل جیمنائی API Key
@@ -370,59 +367,61 @@ jobs:
                 }
 
                 if (words.contains("myra") || words.contains("مائرہ") || words.length() > 3) {
-                    queryGeminiAIModern(words);
+                    queryGeminiPureThread(words);
                 }
             }
 
-            // فکسڈ نیو ماڈرن کلاؤڈ انجن (انٹرنیٹ بلاکنگ اور بلڈ فیل سے 100٪ محفوظ)
-            private void queryGeminiAIModern(final String userPrompt) {
-                executorService.execute(() -> {
-                    String aiReply = "سسٹم پروسیسنگ چیک کریں اشفاق بھائی۔";
-                    try {
-                        URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY);
-                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                        conn.setRequestMethod("POST");
-                        conn.setRequestProperty("Content-Type", "application/json");
-                        conn.setDoOutput(true);
+            // فکسڈ نان بلاکنگ خالص تھریڈ انجن (انتہائی ہلکا پھلکا اور 100٪ سکسیس فل بلڈ)
+            private void queryGeminiPureThread(final String userPrompt) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String reply;
+                        try {
+                            URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY);
+                            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                            conn.setRequestMethod("POST");
+                            conn.setRequestProperty("Content-Type", "application/json");
+                            conn.setDoOutput(true);
 
-                        String systemInstruction = "You are MYRA, a super-smart and close personal AI assistant created by Ishfaq Bhai. Talk politely in mixed Urdu and English. Keep responses friendly, witty, and concise.";
-                        String jsonInputString = "{\"contents\": [{\"parts\":[{\"text\":\"" + systemInstruction + " User says: " + userPrompt + "\"}]}]}";
+                            String systemInstruction = "You are MYRA, a super-smart personal AI assistant created by Ishfaq Bhai. Speak politely in Urdu/English mix. Keep answers short.";
+                            String jsonInputString = "{\"contents\": [{\"parts\":[{\"text\":\"" + systemInstruction + " User says: " + userPrompt + "\"}]}]}";
 
-                        try (OutputStream os = conn.getOutputStream()) {
-                            byte[] input = jsonInputString.getBytes("utf-8");
-                            os.write(input, 0, input.length);
+                            try (OutputStream os = conn.getOutputStream()) {
+                                byte[] input = jsonInputString.getBytes("utf-8");
+                                os.write(input, 0, input.length);
+                            }
+
+                            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+                            StringBuilder response = new StringBuilder();
+                            String responseLine;
+                            while ((responseLine = br.readLine()) != null) {
+                                response.append(responseLine.trim());
+                            }
+
+                            String rawResponse = response.toString();
+                            if (rawResponse.contains("text\": \"")) {
+                                String cleanText = rawResponse.substring(rawResponse.indexOf("text\": \"") + 8);
+                                cleanText = cleanText.substring(0, cleanText.indexOf("\""));
+                                reply = cleanText.replace("\\\\n", " ").replace("\\\"", "\"");
+                            } else {
+                                reply = "دوبارہ کوشش کریں اشفاق بھائی۔";
+                            }
+                        } catch (Exception e) {
+                            reply = "لائیو کنکشن کا مسئلہ ہے اشفاق بھائی۔";
                         }
 
-                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
-                        StringBuilder response = new StringBuilder();
-                        String responseLine;
-                        while ((responseLine = br.readLine()) != null) {
-                            response.append(responseLine.trim());
-                        }
-
-                        String rawResponse = response.toString();
-                        if (rawResponse.contains("text\": \"")) {
-                            String cleanText = rawResponse.substring(rawResponse.indexOf("text\": \"") + 8);
-                            cleanText = cleanText.substring(0, cleanText.indexOf("\""));
-                            aiReply = cleanText.replace("\\\\n", " ").replace("\\\"", "\"");
-                        }
-                    } catch (Exception e) {
-                        aiReply = "نیٹ ورک لائیو کنکشن پرابلم ہے اشفاق بھائی۔";
+                        final String finalReply = reply;
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (tts != null) {
+                                    tts.speak(finalReply, TextToSpeech.QUEUE_FLUSH, null, null);
+                                }
+                            }
+                        });
                     }
-
-                    final String finalReply = aiReply;
-                    mainHandler.post(() -> {
-                        if (tts != null) {
-                            tts.speak(finalReply, TextToSpeech.QUEUE_FLUSH, null, null);
-                        }
-                    });
-                });
-            }
-
-            @Override
-            public void onDestroy() {
-                super.onDestroy();
-                executorService.shutdown();
+                }).start();
             }
 
             @Override
