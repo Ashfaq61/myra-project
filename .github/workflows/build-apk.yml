@@ -17,87 +17,19 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Setup Android Directories
-      run: |
-        mkdir -p app/src/main/java/com/myra/assistant
-        mkdir -p app/src/main/res/values
-        mkdir -p app/src/main/res/layout
-        mkdir -p app/src/main/res/drawable
-        echo "sdk.dir=$ANDROID_HOME" > local.properties
-
-    - name: Create Gradle Properties
-      run: |
-        echo "org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8" > gradle.properties
-        echo "android.useAndroidX=true" >> gradle.properties
-        echo "android.enableJetifier=true" >> gradle.properties
-
-    - name: Create Settings Gradle
-      run: |
-        echo "include ':app'" > settings.gradle
-        echo "rootProject.name = 'MyraAssistant'" >> settings.gradle
-
-    - name: Create Root Build Gradle
-      run: |
-        echo "plugins { id 'com.android.application' version '8.2.0' apply false }" > build.gradle
-
-    - name: Create App Build Gradle
-      uses: jakejarvis/s3-sync-action@master
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
       with:
-        args: |
-          cat << 'EOF' > app/build.gradle
-          plugins { id 'com.android.application' }
-          android {
-              namespace 'com.myra.assistant'
-              compileSdk 34
-              defaultConfig {
-                  applicationId "com.myra.assistant"
-                  minSdk 24
-                  targetSdk 34
-                  versionCode 1
-                  versionName "1.0"
-              }
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_17
-                  targetCompatibility JavaVersion.VERSION_17
-              }
-          }
-          dependencies {
-              implementation 'androidx.core:core:1.12.0'
-              implementation 'com.android.volley:volley:1.2.1'
-          }
-          EOF
-      continue-on-error: true
+        gradle-version: 8.2
+        cache-disabled: true
 
-    - name: Fallback App Build Gradle Creation
+    - name: Build Android APK
       run: |
-        echo "plugins { id 'com.android.application' }" > app/build.gradle
-        echo "android { namespace 'com.myra.assistant'; compileSdk 34;" >> app/build.gradle
-        echo "defaultConfig { applicationId 'com.myra.assistant'; minSdk 24; targetSdk 34; versionCode 1; versionName '1.0' }" >> app/build.gradle
-        echo "compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 } }" >> app/build.gradle
-        echo "dependencies { implementation 'androidx.core:core:1.12.0'; implementation 'com.android.volley:volley:1.2.1' }" >> app/build.gradle
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-daemon
 
-    - name: Create Clean Android Manifest
-      run: |
-        echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://tools.github.com/apk/res/tools">' > app/src/main/AndroidManifest.xml
-        echo '<uses-permission android:name="android.permission.RECORD_AUDIO" />' >> app/src/main/AndroidManifest.xml
-        echo '<uses-permission android:name="android.permission.READ_PHONE_STATE" />' >> app/src/main/AndroidManifest.xml
-        echo '<uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />' >> app/src/main/AndroidManifest.xml
-        echo '<uses-permission android:name="android.permission.INTERNET" />' >> app/src/main/AndroidManifest.xml
-        echo '<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />' >> app/src/main/AndroidManifest.xml
-        echo '<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />' >> app/src/main/AndroidManifest.xml
-        echo '<uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" tools:ignore="ProtectedPermissions" />' >> app/src/main/AndroidManifest.xml
-        echo '<application android:allowBackup="true" android:label="MYRA" android:theme="@android:style/Theme.DeviceDefault.NoActionBar">' >> app/src/main/AndroidManifest.xml
-        echo '<activity android:name=".MainActivity" android:exported="true">' >> app/src/main/AndroidManifest.xml
-        echo '<intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>' >> app/src/main/AndroidManifest.xml
-        echo '</activity>' >> app/src/main/AndroidManifest.xml
-        echo '<service android:name=".MyraBackgroundService" android:foregroundServiceType="microphone" android:exported="false" />' >> app/src/main/AndroidManifest.xml
-        echo '<service android:name=".MyraNotificationListener" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">' >> app/src/main/AndroidManifest.xml
-        echo '<intent-filter><action android:name="android.service.notification.NotificationListenerService" /></intent-filter>' >> app/src/main/AndroidManifest.xml
-        echo '</service></application></manifest>' >> app/src/main/AndroidManifest.xml
-
-    - name: Create Glow Circle XML Resource
-      run: |
-        echo '<?xml version="1.0" encoding="utf-8"?>' > app/src/main/res/drawable/glow_circle.xml
-        echo '<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">' >> app/src/main/res/drawable/glow_circle.xml
-        echo '<gradient android:type="radial" android:gradientRadius="150dp" android:startColor="#BB00E5FF" android:endColor="#00000000" />' >> app/src/main/res/drawable/glow_circle.xml
-        echo '<stroke android:width="3dp" android
+    - name: Upload Final Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: MYRA-Assistant
+        path: app/build/outputs/apk/debug/app-debug.apk
