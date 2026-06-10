@@ -80,7 +80,6 @@ jobs:
         }
 
         dependencies {
-            // بالکل بنیادی اینڈرائیڈ لائبریری جو کبھی کریش نہیں ہوتی
             implementation 'androidx.core:core:1.12.0'
         }
         EOF
@@ -126,7 +125,7 @@ jobs:
                 android:text="Welcome Ishfaq!"
                 android:textColor="#00FF00"
                 android:textSize="20sp"
-                **android:gravity="center"**/>
+                android:gravity="center"/>
         </LinearLayout>
         EOF
 
@@ -135,12 +134,10 @@ jobs:
         import android.app.Activity;
         import android.os.Bundle;
 
-        // بالکل سادہ جاوا کوڈ بغیر کسی بیرونی کریش کے
         public class MainActivity extends Activity {
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
-                setComponentModel(savedInstanceState);
                 setContentView(R.layout.activity_main);
             }
         }
