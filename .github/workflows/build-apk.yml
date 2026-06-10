@@ -20,6 +20,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install Gradle
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gradle
+
       - name: Create Project Structure
         run: |
           mkdir -p app/src/main/java/com/myra/assistant
@@ -548,35 +553,8 @@ jobs:
           }
           EOF
 
-      - name: Setup Gradle Wrapper Properly
-        run: |
-          # Create wrapper directory
-          mkdir -p gradle/wrapper
-
-          # Create gradle-wrapper.properties
-          cat <<'EOF' > gradle/wrapper/gradle-wrapper.properties
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
-          networkTimeout=10000
-          validateDistributionUrl=true
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          EOF
-
-          # Download official gradle-wrapper.jar
-          curl -L -o gradle/wrapper/gradle-wrapper.jar \
-            https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradle/wrapper/gradle-wrapper.jar
-
-          # Create proper gradlew script
-          cat <<'EOF' > gradlew
-          #!/bin/sh
-          exec java -cp "$(dirname "$0")/gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain "$@"
-          EOF
-          chmod +x gradlew
-
-      - name: Build APK
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+      - name: Build APK with System Gradle
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
