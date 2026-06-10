@@ -17,26 +17,30 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Initialize and Build Advanced Android Structure
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create Project Structure
         run: |
-          # Create directory structure
           mkdir -p app/src/main/java/com/myra/assistant
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/drawable
-          mkdir -p app/src/main/res/mipmap-hdpi
 
-          # Create local.properties
+      - name: Create Gradle Files
+        run: |
+          # local.properties
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # Create gradle.properties
+          # gradle.properties
           cat <<'EOF' > gradle.properties
           org.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8
           android.useAndroidX=true
           android.enableJetifier=true
+          org.gradle.daemon=false
           EOF
 
-          # Create settings.gradle
+          # settings.gradle
           cat <<'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -56,14 +60,14 @@ jobs:
           include ':app'
           EOF
 
-          # Create root build.gradle
+          # Root build.gradle
           cat <<'EOF' > build.gradle
           plugins {
               id 'com.android.application' version '8.2.0' apply false
           }
           EOF
 
-          # Create app/build.gradle
+          # App build.gradle
           cat <<'EOF' > app/build.gradle
           plugins {
               id 'com.android.application'
@@ -85,9 +89,6 @@ jobs:
                   debug {
                       minifyEnabled false
                   }
-                  release {
-                      minifyEnabled false
-                  }
               }
 
               compileOptions {
@@ -101,7 +102,8 @@ jobs:
           }
           EOF
 
-          # Create strings.xml
+      - name: Create Resource Files
+        run: |
           cat <<'EOF' > app/src/main/res/values/strings.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
@@ -109,20 +111,18 @@ jobs:
           </resources>
           EOF
 
-          # Create colors.xml
           cat <<'EOF' > app/src/main/res/values/colors.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
               <color name="colorPrimary">#00E5FF</color>
-              <color name="colorBackground">#0A0B10</color>
           </resources>
           EOF
 
-          # Create AndroidManifest.xml (FIXED xmlns:tools URL)
+      - name: Create AndroidManifest.xml
+        run: |
           cat <<'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/apk/res-auto"
               package="com.myra.assistant">
 
               <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -132,14 +132,12 @@ jobs:
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-              <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-                  tools:ignore="ProtectedPermissions" />
+              <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
 
               <application
                   android:allowBackup="true"
                   android:label="@string/app_name"
-                  android:theme="@style/Theme.AppCompat.NoActionBar"
-                  tools:ignore="MissingApplicationIcon">
+                  android:theme="@style/Theme.AppCompat.NoActionBar">
 
                   <activity
                       android:name=".MainActivity"
@@ -167,7 +165,8 @@ jobs:
           </manifest>
           EOF
 
-          # Create glow_circle.xml
+      - name: Create Drawable Files
+        run: |
           cat <<'EOF' > app/src/main/res/drawable/glow_circle.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android"
@@ -186,7 +185,6 @@ jobs:
           </shape>
           EOF
 
-          # Create mic_bg.xml
           cat <<'EOF' > app/src/main/res/drawable/mic_bg.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android"
@@ -201,7 +199,8 @@ jobs:
           </shape>
           EOF
 
-          # Create activity_main.xml (FIXED syntax error)
+      - name: Create Layout File
+        run: |
           cat <<'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -261,7 +260,8 @@ jobs:
           </RelativeLayout>
           EOF
 
-          # Create MainActivity.java
+      - name: Create Java Files
+        run: |
           cat <<'EOF' > app/src/main/java/com/myra/assistant/MainActivity.java
           package com.myra.assistant;
 
@@ -307,7 +307,6 @@ jobs:
           }
           EOF
 
-          # Create MyraBackgroundService.java (FIXED: AsyncTask replaced with Thread)
           cat <<'EOF' > app/src/main/java/com/myra/assistant/MyraBackgroundService.java
           package com.myra.assistant;
 
@@ -346,15 +345,11 @@ jobs:
                   super.onCreate();
 
                   NotificationChannel channel = new NotificationChannel(
-                      "myra_gemini",
-                      "MYRA Gemini Live",
-                      NotificationManager.IMPORTANCE_LOW
-                  );
+                      "myra_gemini", "MYRA Gemini Live", NotificationManager.IMPORTANCE_LOW);
                   getSystemService(NotificationManager.class).createNotificationChannel(channel);
 
                   Notification notification = new Notification.Builder(this, "myra_gemini")
-                      .setContentTitle("MYRA Gemini Engine Running")
-                      .build();
+                      .setContentTitle("MYRA Gemini Engine Running").build();
 
                   startForeground(4, notification);
 
@@ -380,8 +375,7 @@ jobs:
                           ArrayList<String> matches = results.getStringArrayList(
                               SpeechRecognizer.RESULTS_RECOGNITION);
                           if (matches != null && !matches.isEmpty()) {
-                              String userWords = matches.get(0).toLowerCase();
-                              handleSmartCommandsAndGemini(userWords);
+                              handleSmartCommandsAndGemini(matches.get(0).toLowerCase());
                           }
                           speechRecognizer.startListening(speechIntent);
                       }
@@ -486,8 +480,8 @@ jobs:
                           int start = rawResponse.indexOf("\"text\": \"") + 9;
                           int end = rawResponse.indexOf("\"", start);
                           if (end > start) {
-                              String aiReply = rawResponse.substring(start, end);
-                              return aiReply.replace("\\n", " ").replace("\\\"", "\"");
+                              return rawResponse.substring(start, end)
+                                  .replace("\\n", " ").replace("\\\"", "\"");
                           }
                       }
                       return "Kuch samajh nahi aaya, phir se bolain.";
@@ -497,25 +491,17 @@ jobs:
               }
 
               @Override
-              public IBinder onBind(Intent intent) {
-                  return null;
-              }
+              public IBinder onBind(Intent intent) { return null; }
 
               @Override
               public void onDestroy() {
                   super.onDestroy();
-                  if (speechRecognizer != null) {
-                      speechRecognizer.destroy();
-                  }
-                  if (tts != null) {
-                      tts.stop();
-                      tts.shutdown();
-                  }
+                  if (speechRecognizer != null) speechRecognizer.destroy();
+                  if (tts != null) { tts.stop(); tts.shutdown(); }
               }
           }
           EOF
 
-          # Create MyraNotificationListener.java
           cat <<'EOF' > app/src/main/java/com/myra/assistant/MyraNotificationListener.java
           package com.myra.assistant;
 
@@ -557,17 +543,17 @@ jobs:
               @Override
               public void onDestroy() {
                   super.onDestroy();
-                  if (tts != null) {
-                      tts.stop();
-                      tts.shutdown();
-                  }
+                  if (tts != null) { tts.stop(); tts.shutdown(); }
               }
           }
           EOF
 
-      - name: Setup Gradle Wrapper
+      - name: Setup Gradle Wrapper Properly
         run: |
+          # Create wrapper directory
           mkdir -p gradle/wrapper
+
+          # Create gradle-wrapper.properties
           cat <<'EOF' > gradle/wrapper/gradle-wrapper.properties
           distributionBase=GRADLE_USER_HOME
           distributionPath=wrapper/dists
@@ -578,36 +564,40 @@ jobs:
           zipStorePath=wrapper/dists
           EOF
 
-      - name: Download Gradle Wrapper
-        run: |
+          # Download official gradle-wrapper.jar
           curl -L -o gradle/wrapper/gradle-wrapper.jar \
             https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradle/wrapper/gradle-wrapper.jar
 
-      - name: Make Gradle Wrapper Executable
-        run: chmod +x gradlew
+          # Create proper gradlew script
+          cat <<'EOF' > gradlew
+          #!/bin/sh
+          exec java -cp "$(dirname "$0")/gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain "$@"
+          EOF
+          chmod +x gradlew
 
-      - name: Build APK with Gradle
+      - name: Build APK
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Rename APK
+      - name: Prepare APK
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk myra-assistant.apk
+          mkdir -p output
+          cp app/build/outputs/apk/debug/app-debug.apk output/myra-assistant.apk
 
-      - name: Upload APK as Artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: myra-assistant-apk
-          path: myra-assistant.apk
+          path: output/myra-assistant.apk
           retention-days: 30
 
-      - name: Create GitHub Release with APK
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          name: "MYRA Assistant Build v${{ github.run_number }}"
+          name: "MYRA Assistant v${{ github.run_number }}"
           body: "MYRA Assistant APK - Auto Build"
-          files: myra-assistant.apk
+          files: output/myra-assistant.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
