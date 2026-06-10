@@ -19,7 +19,6 @@ jobs:
 
     - name: Initialize Android Structure Safely
       run: |
-        # پہلے تمام ضروری فولڈرز بنائیں (بغیر کسی فائل کو نقصان پہنچائے)
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
         mkdir -p app/src/main/res/layout
@@ -289,9 +288,7 @@ jobs:
 
     - name: Verify and Sync Java Files
       run: |
-        # اگر کسی وجہ سے ریپوزٹری کی مین فائل کاپی نہیں ہوئی تو اسے یہیں بنا دیا جائے تاکہ گریڈل پاس ہو جائے
         if [ ! -f "app/src/main/java/com/myra/assistant/MyraBackgroundService.java" ]; then
-          echo "Syncing background engine..."
           cat << 'EOF' > app/src/main/java/com/myra/assistant/MyraBackgroundService.java
           package com.myra.assistant;
           import android.app.Notification;
@@ -428,11 +425,8 @@ jobs:
         ./gradlew :app:assembleDebug --no-daemon
         cp app/build/outputs/apk/debug/app-debug.apk myra-assistant.apk
 
-    - name: Create Direct APK Download Link (Release)
-      uses: softprops/action-gh-release@v2
+    - name: Upload APK as Artifact
+      uses: actions/upload-artifact@v4
       with:
-        tag_name: v${{ github.run_number }}
-        name: "MYRA Assistant Build v${{ github.run_number }}"
-        files: myra-assistant.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: MYRA-Assistant-APK
+        path: myra-assistant.apk
