@@ -31,8 +31,10 @@ jobs:
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/res/drawable-v24
+          mkdir -p app/src/main/res/anim
 
-      - name: Create Gradle Files
+      - name: Create Gradle Configuration Files
         run: |
           # local.properties
           echo "sdk.dir=$ANDROID_HOME" > local.properties
@@ -104,23 +106,284 @@ jobs:
 
           dependencies {
               implementation 'androidx.core:core:1.12.0'
+              implementation 'androidx.appcompat:appcompat:1.6.1'
           }
           EOF
 
       - name: Create Resource Files
         run: |
+          # strings.xml
           cat <<'EOF' > app/src/main/res/values/strings.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
               <string name="app_name">MYRA</string>
+              <string name="status_listening">MYRA: Gemini Live Active hai! Bolen Ashfaq Bhai...</string>
+              <string name="status_processing">MYRA: Soch rahi hoon...</string>
+              <string name="status_ready">MYRA: Ready hoon!</string>
           </resources>
           EOF
 
+          # colors.xml
           cat <<'EOF' > app/src/main/res/values/colors.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
               <color name="colorPrimary">#00E5FF</color>
+              <color name="colorPrimaryDark">#0A0B10</color>
+              <color name="colorAccent">#00E5FF</color>
+              <color name="neonCyan">#00E5FF</color>
+              <color name="darkBackground">#0A0B10</color>
+              <color name="cardBackground">#1A1A22</color>
+              <color name="textSecondary">#8A90A6</color>
           </resources>
+          EOF
+
+          # styles.xml
+          cat <<'EOF' > app/src/main/res/values/styles.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+                  <item name="colorPrimary">@color/neonCyan</item>
+                  <item name="colorPrimaryDark">@color/darkBackground</item>
+                  <item name="colorAccent">@color/neonCyan</item>
+                  <item name="android:windowBackground">@color/darkBackground</item>
+              </style>
+          </resources>
+          EOF
+
+      - name: Create Animation Files
+        run: |
+          # Pulse animation for aura
+          cat <<'EOF' > app/src/main/res/anim/pulse_animation.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <set xmlns:android="http://schemas.android.com/apk/res/android">
+              <scale
+                  android:duration="700"
+                  android:fromXScale="1.0"
+                  android:fromYScale="1.0"
+                  android:toXScale="1.2"
+                  android:toYScale="1.2"
+                  android:pivotX="50%"
+                  android:pivotY="50%"
+                  android:repeatCount="infinite"
+                  android:repeatMode="reverse" />
+          </set>
+          EOF
+
+          # Fade in animation
+          cat <<'EOF' > app/src/main/res/anim/fade_in.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <alpha xmlns:android="http://schemas.android.com/apk/res/android"
+              android:duration="500"
+              android:fromAlpha="0.0"
+              android:toAlpha="1.0" />
+          EOF
+
+      - name: Create Drawable Files
+        run: |
+          # glow_circle.xml - Neon glow aura
+          cat <<'EOF' > app/src/main/res/drawable/glow_circle.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="oval">
+              <gradient
+                  android:type="radial"
+                  android:gradientRadius="150dp"
+                  android:startColor="#BB00E5FF"
+                  android:centerColor="#6600E5FF"
+                  android:endColor="#00000000" />
+              <stroke
+                  android:width="3dp"
+                  android:color="#00E5FF" />
+              <size
+                  android:width="200dp"
+                  android:height="200dp" />
+          </shape>
+          EOF
+
+          # mic_bg.xml - Neon mic button
+          cat <<'EOF' > app/src/main/res/drawable/mic_bg.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="oval">
+              <solid android:color="#1A1A22" />
+              <stroke
+                  android:width="2dp"
+                  android:color="#00E5FF" />
+              <size
+                  android:width="90dp"
+                  android:height="90dp" />
+          </shape>
+          EOF
+
+          # mic_active.xml - Active mic state
+          cat <<'EOF' > app/src/main/res/drawable/mic_active.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="oval">
+              <solid android:color="#00E5FF" />
+              <stroke
+                  android:width="3dp"
+                  android:color="#FFFFFF" />
+              <size
+                  android:width="90dp"
+                  android:height="90dp" />
+          </shape>
+          EOF
+
+          # neon_border.xml - Neon border effect
+          cat <<'EOF' > app/src/main/res/drawable/neon_border.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <solid android:color="#1A1A22" />
+              <stroke
+                  android:width="2dp"
+                  android:color="#00E5FF" />
+              <corners android:radius="16dp" />
+          </shape>
+          EOF
+
+          # ripple_effect.xml - Touch ripple
+          cat <<'EOF' > app/src/main/res/drawable/ripple_effect.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <ripple xmlns:android="http://schemas.android.com/apk/res/android"
+              android:color="#33FFFFFF">
+              <item android:drawable="@drawable/mic_bg" />
+          </ripple>
+          EOF
+
+      - name: Create Layout File
+        run: |
+          cat <<'EOF' > app/src/main/res/layout/activity_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#0A0B10"
+              android:padding="20dp">
+
+              <!-- Title -->
+              <TextView
+                  android:id="@+id/titleText"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:text="M Y R A"
+                  android:textColor="#00E5FF"
+                  android:textSize="36sp"
+                  android:textStyle="bold"
+                  android:letterSpacing="0.5"
+                  android:layout_centerHorizontal="true"
+                  android:layout_marginTop="40dp"
+                  android:shadowColor="#00E5FF"
+                  android:shadowRadius="10"
+                  android:shadowDx="0"
+                  android:shadowDy="0" />
+
+              <!-- Subtitle -->
+              <TextView
+                  android:id="@+id/subtitleText"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_below="@id/titleText"
+                  android:layout_centerHorizontal="true"
+                  android:layout_marginTop="8dp"
+                  android:text="Gemini AI Assistant"
+                  android:textColor="#8A90A6"
+                  android:textSize="14sp"
+                  android:letterSpacing="0.3" />
+
+              <!-- Glow Aura Container -->
+              <FrameLayout
+                  android:id="@+id/auraContainer"
+                  android:layout_width="280dp"
+                  android:layout_height="280dp"
+                  android:layout_centerInParent="true"
+                  android:layout_marginTop="20dp">
+
+                  <!-- Outer glow ring -->
+                  <View
+                      android:id="@+id/auraGlowOuter"
+                      android:layout_width="260dp"
+                      android:layout_height="260dp"
+                      android:layout_gravity="center"
+                      android:background="@drawable/glow_circle"
+                      android:alpha="0.3" />
+
+                  <!-- Main glow aura -->
+                  <View
+                      android:id="@+id/auraGlow"
+                      android:layout_width="200dp"
+                      android:layout_height="200dp"
+                      android:layout_gravity="center"
+                      android:background="@drawable/glow_circle" />
+
+                  <!-- Inner core -->
+                  <View
+                      android:id="@+id/auraCore"
+                      android:layout_width="120dp"
+                      android:layout_height="120dp"
+                      android:layout_gravity="center"
+                      android:background="@drawable/mic_bg" />
+              </FrameLayout>
+
+              <!-- Status Card -->
+              <LinearLayout
+                  android:id="@+id/statusCard"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_below="@id/auraContainer"
+                  android:layout_marginTop="30dp"
+                  android:background="@drawable/neon_border"
+                  android:padding="16dp"
+                  android:orientation="vertical">
+
+                  <TextView
+                      android:id="@+id/statusLabel"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="STATUS"
+                      android:textColor="#00E5FF"
+                      android:textSize="12sp"
+                      android:letterSpacing="0.2"
+                      android:layout_marginBottom="4dp" />
+
+                  <TextView
+                      android:id="@+id/statusText"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:text="MYRA: Gemini Live Active hai! Bolen Ashfaq Bhai..."
+                      android:textColor="#8A90A6"
+                      android:textSize="16sp"
+                      android:lineSpacingMultiplier="1.2" />
+              </LinearLayout>
+
+              <!-- Command Hints -->
+              <TextView
+                  android:id="@+id/hintsText"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_above="@id/micButton"
+                  android:layout_marginBottom="20dp"
+                  android:text="Commands: &quot;Myra&quot; | &quot;Call Uthao&quot; | &quot;WhatsApp&quot;"
+                  android:textColor="#5A6070"
+                  android:textSize="12sp"
+                  android:gravity="center" />
+
+              <!-- Mic Button -->
+              <Button
+                  android:id="@+id/micButton"
+                  android:layout_width="95dp"
+                  android:layout_height="95dp"
+                  android:layout_alignParentBottom="true"
+                  android:layout_centerHorizontal="true"
+                  android:layout_marginBottom="40dp"
+                  android:text="🎤"
+                  android:textSize="36sp"
+                  android:background="@drawable/ripple_effect"
+                  android:textColor="#00E5FF"
+                  android:elevation="8dp" />
+
+          </RelativeLayout>
           EOF
 
       - name: Create AndroidManifest.xml
@@ -138,15 +401,17 @@ jobs:
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
               <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
+              <uses-permission android:name="android.permission.VIBRATE" />
 
               <application
                   android:allowBackup="true"
                   android:label="@string/app_name"
-                  android:theme="@style/Theme.AppCompat.NoActionBar">
+                  android:theme="@style/AppTheme">
 
                   <activity
                       android:name=".MainActivity"
-                      android:exported="true">
+                      android:exported="true"
+                      android:screenOrientation="portrait">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
@@ -170,102 +435,7 @@ jobs:
           </manifest>
           EOF
 
-      - name: Create Drawable Files
-        run: |
-          cat <<'EOF' > app/src/main/res/drawable/glow_circle.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"
-              android:shape="oval">
-              <gradient
-                  android:type="radial"
-                  android:gradientRadius="150dp"
-                  android:startColor="#BB00E5FF"
-                  android:endColor="#00000000" />
-              <stroke
-                  android:width="3dp"
-                  android:color="#00E5FF" />
-              <size
-                  android:width="200dp"
-                  android:height="200dp" />
-          </shape>
-          EOF
-
-          cat <<'EOF' > app/src/main/res/drawable/mic_bg.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <shape xmlns:android="http://schemas.android.com/apk/res/android"
-              android:shape="oval">
-              <solid android:color="#1A1A22" />
-              <stroke
-                  android:width="2dp"
-                  android:color="#00E5FF" />
-              <size
-                  android:width="90dp"
-                  android:height="90dp" />
-          </shape>
-          EOF
-
-      - name: Create Layout File
-        run: |
-          cat <<'EOF' > app/src/main/res/layout/activity_main.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="#0A0B10"
-              android:padding="20dp">
-
-              <TextView
-                  android:id="@+id/titleText"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:text="M Y R A"
-                  android:textColor="#00E5FF"
-                  android:textSize="32sp"
-                  android:textStyle="bold"
-                  android:letterSpacing="0.4"
-                  android:layout_centerHorizontal="true"
-                  android:layout_marginTop="30dp" />
-
-              <FrameLayout
-                  android:id="@+id/auraContainer"
-                  android:layout_width="250dp"
-                  android:layout_height="250dp"
-                  android:layout_centerInParent="true">
-
-                  <View
-                      android:id="@+id/auraGlow"
-                      android:layout_width="200dp"
-                      android:layout_height="200dp"
-                      android:layout_gravity="center"
-                      android:background="@drawable/glow_circle" />
-              </FrameLayout>
-
-              <TextView
-                  android:id="@+id/statusText"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:layout_below="@id/auraContainer"
-                  android:layout_marginTop="30dp"
-                  android:text="MYRA: Gemini Live Active hai! Bolen Ashfaq Bhai..."
-                  android:textColor="#8A90A6"
-                  android:textSize="18sp"
-                  android:gravity="center" />
-
-              <Button
-                  android:id="@+id/micButton"
-                  android:layout_width="95dp"
-                  android:layout_height="95dp"
-                  android:layout_alignParentBottom="true"
-                  android:layout_centerHorizontal="true"
-                  android:layout_marginBottom="50dp"
-                  android:text="🎤"
-                  android:textSize="36sp"
-                  android:background="@drawable/mic_bg"
-                  android:textColor="#00E5FF" />
-          </RelativeLayout>
-          EOF
-
-      - name: Create Java Files
+      - name: Create MainActivity.java
         run: |
           cat <<'EOF' > app/src/main/java/com/myra/assistant/MainActivity.java
           package com.myra.assistant;
@@ -273,27 +443,54 @@ jobs:
           import android.app.Activity;
           import android.content.Intent;
           import android.os.Bundle;
+          import android.os.Handler;
+          import android.os.Looper;
+          import android.view.View;
           import android.view.animation.Animation;
+          import android.view.animation.AnimationUtils;
           import android.view.animation.ScaleAnimation;
+          import android.widget.Button;
+          import android.widget.TextView;
           import androidx.core.app.ActivityCompat;
 
           public class MainActivity extends Activity {
+              
+              private View auraGlow;
+              private View auraGlowOuter;
+              private View auraCore;
+              private TextView statusText;
+              private Button micButton;
+              private Handler uiHandler = new Handler(Looper.getMainLooper());
+
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
                   setContentView(R.layout.activity_main);
 
-                  android.view.View auraGlow = findViewById(R.id.auraGlow);
-                  ScaleAnimation pulse = new ScaleAnimation(
-                      1.0f, 1.2f, 1.0f, 1.2f,
-                      Animation.RELATIVE_TO_SELF, 0.5f,
-                      Animation.RELATIVE_TO_SELF, 0.5f
-                  );
-                  pulse.setDuration(700);
-                  pulse.setRepeatMode(Animation.REVERSE);
-                  pulse.setRepeatCount(Animation.INFINITE);
-                  auraGlow.startAnimation(pulse);
+                  // Initialize views
+                  auraGlow = findViewById(R.id.auraGlow);
+                  auraGlowOuter = findViewById(R.id.auraGlowOuter);
+                  auraCore = findViewById(R.id.auraCore);
+                  statusText = findViewById(R.id.statusText);
+                  micButton = findViewById(R.id.micButton);
 
+                  // Start pulse animations
+                  startPulseAnimation(auraGlow, 1.0f, 1.2f, 700);
+                  startPulseAnimation(auraGlowOuter, 1.0f, 1.3f, 1000);
+                  startPulseAnimation(auraCore, 0.9f, 1.1f, 500);
+
+                  // Fade in animation
+                  Animation fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
+                  findViewById(R.id.titleText).startAnimation(fadeIn);
+
+                  // Mic button click
+                  micButton.setOnClickListener(v -> {
+                      v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
+                      statusText.setText("MYRA: Sun rahi hoon...");
+                      micButton.setBackgroundResource(R.drawable.mic_active);
+                  });
+
+                  // Request permissions
                   ActivityCompat.requestPermissions(this, new String[]{
                       android.Manifest.permission.RECORD_AUDIO,
                       android.Manifest.permission.READ_PHONE_STATE,
@@ -301,23 +498,50 @@ jobs:
                       android.Manifest.permission.READ_CALL_LOG
                   }, 1);
 
+                  // Open notification listener settings
                   try {
                       Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
                       startActivity(intent);
                   } catch(Exception e) {}
 
+                  // Start background service
                   Intent serviceIntent = new Intent(this, MyraBackgroundService.class);
                   startForegroundService(serviceIntent);
+              }
+
+              private void startPulseAnimation(View view, float fromScale, float toScale, long duration) {
+                  ScaleAnimation pulse = new ScaleAnimation(
+                      fromScale, toScale, fromScale, toScale,
+                      Animation.RELATIVE_TO_SELF, 0.5f,
+                      Animation.RELATIVE_TO_SELF, 0.5f
+                  );
+                  pulse.setDuration(duration);
+                  pulse.setRepeatMode(Animation.REVERSE);
+                  pulse.setRepeatCount(Animation.INFINITE);
+                  view.startAnimation(pulse);
+              }
+
+              public void updateStatus(String message) {
+                  uiHandler.post(() -> statusText.setText(message));
+              }
+
+              @Override
+              protected void onDestroy() {
+                  super.onDestroy();
+                  uiHandler.removeCallbacksAndMessages(null);
               }
           }
           EOF
 
+      - name: Create MyraBackgroundService.java
+        run: |
           cat <<'EOF' > app/src/main/java/com/myra/assistant/MyraBackgroundService.java
           package com.myra.assistant;
 
           import android.app.Notification;
           import android.app.NotificationChannel;
           import android.app.NotificationManager;
+          import android.app.PendingIntent;
           import android.app.Service;
           import android.content.Context;
           import android.content.Intent;
@@ -326,6 +550,7 @@ jobs:
           import android.os.Handler;
           import android.os.IBinder;
           import android.os.Looper;
+          import android.os.Vibrator;
           import android.telecom.TelecomManager;
           import android.speech.RecognitionListener;
           import android.speech.RecognizerIntent;
@@ -344,27 +569,51 @@ jobs:
               private TextToSpeech tts;
               private Intent speechIntent;
               private final Handler mainHandler = new Handler(Looper.getMainLooper());
+              private Vibrator vibrator;
+              private boolean isListening = false;
 
               @Override
               public void onCreate() {
                   super.onCreate();
+                  vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
+                  // Create notification channel
                   NotificationChannel channel = new NotificationChannel(
                       "myra_gemini", "MYRA Gemini Live", NotificationManager.IMPORTANCE_LOW);
+                  channel.setDescription("MYRA AI Assistant Background Service");
                   getSystemService(NotificationManager.class).createNotificationChannel(channel);
 
+                  // Create notification with tap action
+                  Intent tapIntent = new Intent(this, MainActivity.class);
+                  tapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                  PendingIntent pendingIntent = PendingIntent.getActivity(
+                      this, 0, tapIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
                   Notification notification = new Notification.Builder(this, "myra_gemini")
-                      .setContentTitle("MYRA Gemini Engine Running").build();
+                      .setContentTitle("MYRA Gemini Engine Running")
+                      .setContentText("Tap to open MYRA")
+                      .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+                      .setContentIntent(pendingIntent)
+                      .setOngoing(true)
+                      .build();
 
                   startForeground(4, notification);
 
+                  // Initialize TTS
                   tts = new TextToSpeech(this, status -> {
                       if (status == TextToSpeech.SUCCESS) {
                           tts.setLanguage(new Locale("ur", "PK"));
+                          tts.setSpeechRate(0.9f);
+                          speakWelcome();
                       }
                   });
 
                   startContinuousListening();
+              }
+
+              private void speakWelcome() {
+                  tts.speak("Assalam o Alaikum Ashfaq Bhai! MYRA Gemini Live mode par active hai.",
+                      TextToSpeech.QUEUE_FLUSH, null, null);
               }
 
               private void startContinuousListening() {
@@ -373,25 +622,37 @@ jobs:
                   speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                       RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                   speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ur-PK");
+                  speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
 
                   speechRecognizer.setRecognitionListener(new RecognitionListener() {
                       @Override
+                      public void onReadyForSpeech(Bundle params) {
+                          isListening = true;
+                      }
+
+                      @Override
+                      public void onBeginningOfSpeech() {
+                          vibrate(50);
+                      }
+
+                      @Override
                       public void onResults(Bundle results) {
+                          isListening = false;
                           ArrayList<String> matches = results.getStringArrayList(
                               SpeechRecognizer.RESULTS_RECOGNITION);
                           if (matches != null && !matches.isEmpty()) {
-                              handleSmartCommandsAndGemini(matches.get(0).toLowerCase());
+                              String userWords = matches.get(0).toLowerCase();
+                              handleSmartCommandsAndGemini(userWords);
                           }
-                          speechRecognizer.startListening(speechIntent);
+                          restartListening();
                       }
 
                       @Override
                       public void onError(int error) {
-                          speechRecognizer.startListening(speechIntent);
+                          isListening = false;
+                          restartListening();
                       }
 
-                      @Override public void onReadyForSpeech(Bundle params) {}
-                      @Override public void onBeginningOfSpeech() {}
                       @Override public void onRmsChanged(float rmsdB) {}
                       @Override public void onBufferReceived(byte[] buffer) {}
                       @Override public void onEndOfSpeech() {}
@@ -402,7 +663,29 @@ jobs:
                   speechRecognizer.startListening(speechIntent);
               }
 
+              private void restartListening() {
+                  mainHandler.postDelayed(() -> {
+                      if (speechRecognizer != null) {
+                          speechRecognizer.startListening(speechIntent);
+                      }
+                  }, 500);
+              }
+
+              private void vibrate(long milliseconds) {
+                  if (vibrator != null && vibrator.hasVibrator()) {
+                      vibrator.vibrate(milliseconds);
+                  }
+              }
+
               private void handleSmartCommandsAndGemini(String words) {
+                  // Wake word detection
+                  if (!words.contains("myra") && !words.contains("maira") && words.length() < 4) {
+                      return;
+                  }
+
+                  vibrate(100);
+
+                  // Call attend command
                   if (words.contains("attend") || words.contains("call uthao") || words.contains("yes")) {
                       try {
                           TelecomManager telecomManager = (TelecomManager)
@@ -416,37 +699,46 @@ jobs:
                       } catch (Exception e) {}
                   }
 
-                  if (words.contains("whatsapp")) {
+                  // WhatsApp command
+                  if (words.contains("whatsapp") || words.contains("message")) {
                       try {
                           Intent whatsappIntent = new Intent(Intent.ACTION_VIEW);
                           whatsappIntent.setData(Uri.parse(
                               "https://api.whatsapp.com/send?text=" +
-                              Uri.encode("MYRA Assistant Gemini Live mode par set ho chuki hai.")));
+                              Uri.encode("MYRA Assistant se message bheja gaya hai.")));
                           whatsappIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                           startActivity(whatsappIntent);
-                          tts.speak("WhatsApp open kar diya hai.",
+                          tts.speak("WhatsApp open kar diya hai Ashfaq Bhai.",
                               TextToSpeech.QUEUE_FLUSH, null, null);
                           return;
                       } catch (Exception e) {}
                   }
 
-                  if (words.contains("myra") || words.contains("maira") || words.length() > 3) {
-                      new Thread(() -> {
-                          String result = callGeminiAPI(words);
-                          mainHandler.post(() -> {
-                              if (result != null && tts != null) {
-                                  tts.speak(result, TextToSpeech.QUEUE_FLUSH, null, null);
-                              }
-                          });
-                      }).start();
+                  // Time command
+                  if (words.contains("time") || words.contains("time kya")) {
+                      java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("hh:mm a", Locale.getDefault());
+                      String time = sdf.format(new java.util.Date());
+                      tts.speak("Abhi time hai " + time, TextToSpeech.QUEUE_FLUSH, null, null);
+                      return;
                   }
+
+                  // Gemini AI for everything else
+                  tts.speak("Ek minute Ashfaq Bhai, soch rahi hoon...", TextToSpeech.QUEUE_FLUSH, null, null);
+                  new Thread(() -> {
+                      String result = callGeminiAPI(words);
+                      mainHandler.post(() -> {
+                          if (result != null && tts != null) {
+                              tts.speak(result, TextToSpeech.QUEUE_FLUSH, null, null);
+                          }
+                      });
+                  }).start();
               }
 
               private String callGeminiAPI(String userPrompt) {
                   try {
                       String apiKey = System.getenv("GEMINI_API_KEY");
                       if (apiKey == null || apiKey.isEmpty()) {
-                          return "API Key missing hai. Settings check karein.";
+                          return "API Key missing hai. GitHub secrets check karein.";
                       }
 
                       URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/" +
@@ -456,12 +748,12 @@ jobs:
                       conn.setRequestMethod("POST");
                       conn.setRequestProperty("Content-Type", "application/json");
                       conn.setDoOutput(true);
-                      conn.setConnectTimeout(10000);
-                      conn.setReadTimeout(10000);
+                      conn.setConnectTimeout(15000);
+                      conn.setReadTimeout(15000);
 
                       String systemInstruction = "You are MYRA, a super-smart personal AI " +
                           "assistant created by Ashfaq Bhai. Talk politely in mixed Urdu and English. " +
-                          "Keep responses friendly, witty, and concise.";
+                          "Keep responses friendly, witty, and concise. Maximum 2 sentences.";
 
                       String jsonInput = "{\"contents\": [{\"parts\":[{\"text\":\"" +
                           systemInstruction + " User says: " + userPrompt.replace("\"", "\\\"") +
@@ -470,6 +762,11 @@ jobs:
                       try (OutputStream os = conn.getOutputStream()) {
                           byte[] input = jsonInput.getBytes("utf-8");
                           os.write(input, 0, input.length);
+                      }
+
+                      int responseCode = conn.getResponseCode();
+                      if (responseCode != 200) {
+                          return "Server se response nahi mila. Code: " + responseCode;
                       }
 
                       BufferedReader br = new BufferedReader(
@@ -489,9 +786,9 @@ jobs:
                                   .replace("\\n", " ").replace("\\\"", "\"");
                           }
                       }
-                      return "Kuch samajh nahi aaya, phir se bolain.";
+                      return "Jawab samajh nahi aaya, phir se pooch lain.";
                   } catch (Exception e) {
-                      return "Network connection check karein Ashfaq Bhai.";
+                      return "Network issue hai Ashfaq Bhai. Internet check karein.";
                   }
               }
 
@@ -501,12 +798,19 @@ jobs:
               @Override
               public void onDestroy() {
                   super.onDestroy();
-                  if (speechRecognizer != null) speechRecognizer.destroy();
-                  if (tts != null) { tts.stop(); tts.shutdown(); }
+                  if (speechRecognizer != null) {
+                      speechRecognizer.destroy();
+                  }
+                  if (tts != null) {
+                      tts.stop();
+                      tts.shutdown();
+                  }
               }
           }
           EOF
 
+      - name: Create MyraNotificationListener.java
+        run: |
           cat <<'EOF' > app/src/main/java/com/myra/assistant/MyraNotificationListener.java
           package com.myra.assistant;
 
@@ -524,6 +828,7 @@ jobs:
                   tts = new TextToSpeech(this, status -> {
                       if (status == TextToSpeech.SUCCESS) {
                           tts.setLanguage(new Locale("ur", "PK"));
+                          tts.setSpeechRate(0.9f);
                       }
                   });
               }
@@ -533,22 +838,35 @@ jobs:
                   String pack = sbn.getPackageName();
                   android.app.Bundle extras = sbn.getNotification().extras;
                   String title = extras.getString("android.title");
+                  String text = extras.getString("android.text");
 
                   if (title != null && !pack.contains("com.myra.assistant")) {
                       String msg = "Ashfaq Bhai, naya notification aaya hai.";
+                      
                       if (pack.contains("whatsapp")) {
                           msg = "Ashfaq Bhai, WhatsApp par " + title + " ka message aaya hai.";
-                      } else if (pack.contains("telecom") || pack.contains("dialer")) {
+                      } else if (pack.contains("telecom") || pack.contains("dialer") || pack.contains("phone")) {
                           msg = "Ashfaq Bhai, " + title + " ki call aa rahi hai.";
+                      } else if (pack.contains("sms") || pack.contains("messaging")) {
+                          msg = "Ashfaq Bhai, " + title + " ka SMS aaya hai.";
+                      } else if (pack.contains("gmail") || pack.contains("email")) {
+                          msg = "Ashfaq Bhai, " + title + " ka email aaya hai.";
                       }
+                      
                       tts.speak(msg, TextToSpeech.QUEUE_ADD, null, null);
                   }
               }
 
               @Override
+              public void onNotificationRemoved(StatusBarNotification sbn) {}
+
+              @Override
               public void onDestroy() {
                   super.onDestroy();
-                  if (tts != null) { tts.stop(); tts.shutdown(); }
+                  if (tts != null) {
+                      tts.stop();
+                      tts.shutdown();
+                  }
               }
           }
           EOF
@@ -575,7 +893,19 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           name: "MYRA Assistant v${{ github.run_number }}"
-          body: "MYRA Assistant APK - Auto Build"
+          body: |
+            ## MYRA Assistant APK - Auto Build
+            
+            ### Features:
+            - 🤖 Gemini AI Integration
+            - 🎙️ Continuous Voice Listening
+            - 📞 Call Attend Command
+            - 💬 WhatsApp Open Command
+            - 🔔 Notification Reader (TTS)
+            - ✨ Neon Glow UI
+            - 🌙 Dark Theme
+            
+            **Built by:** Ashfaq Bhai
           files: output/myra-assistant.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
