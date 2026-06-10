@@ -17,7 +17,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Initialize and Build Safe Android Structure
+    - name: Initialize and Build Advanced Android Structure
       run: |
         mkdir -p app/src/main/java/com/myra/assistant
         mkdir -p app/src/main/res/values
@@ -86,45 +86,70 @@ jobs:
         EOF
 
         cat <<EOF > app/src/main/AndroidManifest.xml
-        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://tools.github.com/apk/res/tools">
+            
             <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+            <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+            <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" 
+                tools:ignore="ProtectedPermissions" />
+
             <application
                 android:allowBackup="true"
                 android:label="MYRA"
                 android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+                
                 <activity android:name=".MainActivity" android:exported="true">
                     <intent-filter>
                         <action android:name="android.intent.action.MAIN" />
                         <category android:name="android.intent.category.LAUNCHER" />
                     </intent-filter>
                 </activity>
+
+                <service android:name=".MyraBackgroundService" 
+                    android:foregroundServiceType="microphone"
+                    android:exported="false" />
+
+                <service android:name=".MyraNotificationListener"
+                    android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+                    android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.service.notification.NotificationListenerService" />
+                    </intent-filter>
+                </service>
             </application>
         </manifest>
         EOF
 
-        # Glow Effect Shape for Aura
+        # چمکتا ہوا آرا رِنگ (Glow Aura Shape)
         cat <<EOF > app/src/main/res/drawable/glow_circle.xml
         <?xml version="1.0" encoding="utf-8"?>
-        <shape xmlns:android="http://schemas.android.com/apk/res/android"
-            android:shape="oval">
-            <solid android:color="#3300E5FF"/>
-            <stroke android:width="4dp" android:color="#00E5FF"/>
-            <size android:width="180dp" android:height="180dp"/>
+        <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="150dp"
+                android:startColor="#BB00E5FF" 
+                android:endColor="#00000000" />
+            <stroke android:width="3dp" android:color="#00E5FF"/>
+            <size android:width="200dp" android:height="200dp"/>
         </shape>
         EOF
 
-        # Mic Button Shape
+        # خوبصورت بٹن شیپ
         cat <<EOF > app/src/main/res/drawable/mic_bg.xml
         <?xml version="1.0" encoding="utf-8"?>
-        <shape xmlns:android="http://schemas.android.com/apk/res/android"
-            android:shape="oval">
-            <solid android:color="#1E1E24"/>
+        <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+            <solid android:color="#1A1A22"/>
             <stroke android:width="2dp" android:color="#00E5FF"/>
-            <size android:width="80dp" android:height="80dp"/>
+            <size android:width="90dp" android:height="90dp"/>
         </shape>
         EOF
 
-        # Futuristic Video-like Layout
+        # فائنل خوبصورت نیون اور جدید لے آؤٹ
         cat <<EOF > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -139,22 +164,21 @@ jobs:
                 android:layout_height="wrap_content"
                 android:text="M Y R A"
                 android:textColor="#00E5FF"
-                android:textSize="28sp"
+                android:textSize="32sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.3"
+                android:letterSpacing="0.4"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="30dp"/>
 
             <FrameLayout
                 android:id="@+id/auraContainer"
-                android:layout_width="220dp"
-                android:layout_height="220dp"
+                android:layout_width="250dp"
+                android:layout_height="250dp"
                 android:layout_centerInParent="true">
-                
                 <View
                     android:id="@+id/auraGlow"
-                    android:layout_width="180dp"
-                    android:layout_height="180dp"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
                     android:layout_gravity="center"
                     android:background="@drawable/glow_circle"/>
             </FrameLayout>
@@ -164,27 +188,23 @@ jobs:
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/auraContainer"
-                android:layout_marginTop="20dp"
-                android:paddingLeft="20dp"
-                android:paddingRight="20dp"
-                android:text="MYRA: Assalam-o-Alaikum Ishfaq Bhai. I am listening."
+                android:layout_marginTop="30dp"
+                android:text="MYRA: جیمنائی لائیو ایکٹو ہے! بولیں اشفاق بھائی..."
                 android:textColor="#8A90A6"
                 android:textSize="18sp"
-                android:gravity="center"
-                android:lineSpacingMultiplier="1.2"/>
+                android:gravity="center"/>
 
             <Button
                 android:id="@+id/micButton"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
+                android:layout_width="95dp"
+                android:layout_height="95dp"
                 android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
-                android:layout_marginBottom="40dp"
+                android:layout_marginBottom="50dp"
                 android:text="🎤"
-                android:textSize="32sp"
+                android:textSize="36sp"
                 android:background="@drawable/mic_bg"
                 android:textColor="#00E5FF"/>
-
         </RelativeLayout>
         EOF
 
@@ -194,175 +214,246 @@ jobs:
         import android.app.Activity;
         import android.content.Intent;
         import android.os.Bundle;
-        import android.speech.RecognitionListener;
-        import android.speech.RecognizerIntent;
-        import android.speech.SpeechRecognizer;
-        import android.speech.tts.TextToSpeech;
-        import android.view.View;
         import android.view.animation.Animation;
         import android.view.animation.ScaleAnimation;
-        import android.widget.Button;
-        import android.widget.TextView;
-        import java.util.ArrayList;
-        import java.util.Locale;
+        import androidx.core.app.ActivityCompat;
 
         public class MainActivity extends Activity {
-
-            private TextView statusText;
-            private Button micButton;
-            private View auraGlow;
-            private SpeechRecognizer speechRecognizer;
-            private TextToSpeech tts;
-            private boolean isListening = false;
-
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 super.onCreate(savedInstanceState);
                 setContentView(R.layout.activity_main);
 
-                statusText = findViewById(R.id.statusText);
-                micButton = findViewById(R.id.micButton);
-                auraGlow = findViewById(R.id.auraGlow);
+                android.view.View auraGlow = findViewById(R.id.auraGlow);
+                ScaleAnimation pulse = new ScaleAnimation(1.0f, 1.2f, 1.0f, 1.2f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                pulse.setDuration(700);
+                pulse.setRepeatMode(Animation.REVERSE);
+                pulse.setRepeatCount(Animation.INFINITE);
+                auraGlow.startAnimation(pulse);
 
-                // Initialize Text to Speech Engine
-                tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-                    @Override
-                    public void onInit(int status) {
-                        if (status == TextToSpeech.SUCCESS) {
-                            tts.setLanguage(new Locale("ur", "PK"));
-                            speak("جی اشفاق بھائی، مائرہ حاضر ہے۔ فرمائیے؟");
-                        }
+                ActivityCompat.requestPermissions(this, new String[]{
+                    android.Manifest.permission.RECORD_AUDIO,
+                    android.Manifest.permission.READ_PHONE_STATE,
+                    android.Manifest.permission.ANSWER_PHONE_CALLS
+                }, 1);
+
+                try {
+                    Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                    startActivity(intent);
+                } catch(Exception e){}
+
+                Intent serviceIntent = new Intent(this, MyraBackgroundService.class);
+                startForegroundService(serviceIntent);
+            }
+        }
+        EOF
+
+        cat <<EOF > app/src/main/java/com/myra/assistant/MyraBackgroundService.java
+        package com.myra.assistant;
+
+        import android.app.Notification;
+        import android.app.NotificationChannel;
+        import android.app.NotificationManager;
+        import android.app.Service;
+        import android.content.Context;
+        import android.content.Intent;
+        import android.net.Uri;
+        import android.os.Bundle;
+        import android.os.IBinder;
+        import android.telecom.TelecomManager;
+        import android.speech.RecognitionListener;
+        import android.speech.RecognizerIntent;
+        import android.speech.SpeechRecognizer;
+        import android.speech.tts.TextToSpeech;
+        import java.io.BufferedReader;
+        import java.io.InputStreamReader;
+        import java.io.OutputStream;
+        import java.net.HttpURLConnection;
+        import java.net.URL;
+        import java.util.ArrayList;
+        import java.util.Locale;
+
+        public class MyraBackgroundService extends Service {
+            private SpeechRecognizer speechRecognizer;
+            private TextToSpeech tts;
+            private Intent speechIntent;
+            
+            // آپ کی لائیو اور اوریجنل Gemini API Key سیٹ کر دی گئی ہے
+            private final String GEMINI_API_KEY = "AIzaSyDGFeaG6_MqLDQF2lQ1Sh6vjgmFSy3Y8AE"; 
+
+            @Override
+            public void onCreate() {
+                super.onCreate();
+                
+                NotificationChannel channel = new NotificationChannel("myra_gemini", "MYRA Gemini Live", NotificationManager.IMPORTANCE_LOW);
+                getSystemService(NotificationManager.class).createNotificationChannel(channel);
+                Notification notification = new Notification.Builder(this, "myra_gemini").setContentTitle("MYRA Gemini Engine Running").build();
+                startForeground(4, notification);
+
+                tts = new TextToSpeech(this, status -> {
+                    if (status == TextToSpeech.SUCCESS) {
+                        tts.setLanguage(new Locale("ur", "PK"));
                     }
                 });
 
-                // Setup Speech Recognition Engine
+                startContinuousListening();
+            }
+
+            private void startContinuousListening() {
                 speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-                final Intent speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
                 speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
                 speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ur-PK");
 
                 speechRecognizer.setRecognitionListener(new RecognitionListener() {
                     @Override
-                    public void onReadyForSpeech(Bundle params) {
-                        statusText.setText("MYRA: Listening carefully...");
-                        startAuraAnimation(1.0f, 1.3f, Animation.INFINITE);
-                    }
-
-                    @Override
-                    public void onBeginningOfSpeech() {}
-                    
-                    @Override
-                    public void onRmsChanged(float rmsdB) {
-                        // Dynamic wave scaling response to loudness
-                        float scale = 1.0f + (rmsdB / 10.0f);
-                        if(scale > 1.8f) scale = 1.8f;
-                        auraGlow.setScaleX(scale);
-                        auraGlow.setScaleY(scale);
-                    }
-
-                    @Override
-                    public void onBufferReceived(byte[] buffer) {}
-                    
-                    @Override
-                    public void onEndOfSpeech() {
-                        isListening = false;
-                        micButton.setText("🎤");
-                        auraGlow.clearAnimation();
+                    public void onResults(Bundle results) {
+                        ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                        if (matches != null && !matches.isEmpty()) {
+                            String userWords = matches.get(0).toLowerCase();
+                            handleSmartCommandsAndGemini(userWords);
+                        }
+                        speechRecognizer.startListening(speechIntent);
                     }
 
                     @Override
                     public void onError(int error) {
-                        statusText.setText("MYRA: Aawaz clear nahi aayi. Dubara mic tap karein.");
-                        isListening = false;
-                        micButton.setText("🎤");
-                        auraGlow.clearAnimation();
+                        speechRecognizer.startListening(speechIntent);
                     }
 
                     @Override
-                    public void onResults(Bundle results) {
-                        ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                        if (matches != null && matches.size() > 0) {
-                            String userQuery = matches.get(0);
-                            processCustomPrompt(userQuery);
-                        }
-                    }
-
+                    public void onReadyForSpeech(Bundle params) {}
+                    @Override
+                    public void onBeginningOfSpeech() {}
+                    @Override
+                    public void onRmsChanged(float rmsdB) {}
+                    @Override
+                    public void onBufferReceived(byte[] buffer) {}
+                    @Override
+                    public void onEndOfSpeech() {}
                     @Override
                     public void onPartialResults(Bundle partialResults) {}
                     @Override
                     public void onEvent(int eventType, Bundle params) {}
                 });
 
-                micButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            if (!isListening) {
-                                speechRecognizer.startListening(speechIntent);
-                                isListening = true;
-                                micButton.setText("🛑");
-                            } else {
-                                speechRecognizer.stopListening();
-                                isListening = false;
-                                micButton.setText("🎤");
-                                auraGlow.clearAnimation();
-                            }
-                        } catch (Exception e) {
-                            statusText.setText("System Error: " + e.getMessage());
+                speechRecognizer.startListening(speechIntent);
+            }
+
+            private void handleSmartCommandsAndGemini(String words) {
+                // 1. کال اٹھانے کی وائس کمانڈ
+                if (words.contains("attend") || words.contains("کال اٹھاؤ") || words.contains("yes")) {
+                    try {
+                        TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+                        if (telecomManager != null && telecomManager.isRinging()) {
+                            telecomManager.acceptRingingCall();
+                            tts.speak("کال اٹھا دی ہے اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
+                            return;
                         }
+                    } catch (Exception e) {}
+                }
+
+                // 2. واٹس ایپ پرامپٹ لوڈر
+                if (words.contains("whatsapp") || words.contains("واٹس ایپ")) {
+                    try {
+                        Intent whatsappIntent = new Intent(Intent.ACTION_VIEW);
+                        whatsappIntent.setData(Uri.parse("https://api.whatsapp.com/send?text=" + Uri.encode("مائرہ اسسٹنٹ جیمنائی لائیو موڈ پر سیٹ ہو چکی ہے۔")));
+                        whatsappIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(whatsappIntent);
+                        tts.speak("واٹس ایپ اوپن کر دیا ہے۔", TextToSpeech.QUEUE_FLUSH, null, null);
+                        return;
+                    } catch (Exception e) {}
+                }
+
+                // 3. جیمنائی لائیو کلاؤڈ سرچ رن کرنا
+                if (words.contains("myra") || words.contains("مائرہ") || words.length() > 3) {
+                    queryGeminiAI(words);
+                }
+            }
+
+            private void queryGeminiAI(String userPrompt) {
+                new Thread(() -> {
+                    try {
+                        URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY);
+                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                        conn.setRequestMethod("POST");
+                        conn.setRequestProperty("Content-Type", "application/json");
+                        conn.setDoOutput(true);
+
+                        // مائرہ کی اوریجنل اردو-انگلش کسٹم پرسنالٹی انسٹرکشن
+                        String systemInstruction = "You are MYRA, a super-smart and close personal AI assistant created by Ishfaq Bhai. Talk politely in mixed Urdu/Hindi and English. Keep responses friendly, witty, and concise.";
+                        String jsonInputString = "{\"contents\": [{\"parts\":[{\"text\":\"" + systemInstruction + " User says: " + userPrompt + "\"}]}]}";
+
+                        try (OutputStream os = conn.getOutputStream()) {
+                            byte[] input = jsonInputString.getBytes("utf-8");
+                            os.write(input, 0, input.length);
+                        }
+
+                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+                        StringBuilder response = new StringBuilder();
+                        String responseLine;
+                        while ((responseLine = br.readLine()) != null) {
+                            response.append(responseLine.trim());
+                        }
+
+                        String rawResponse = response.toString();
+                        if (rawResponse.contains("text\": \"")) {
+                            String aiReply = rawResponse.substring(rawResponse.indexOf("text\": \"") + 8);
+                            aiReply = aiReply.substring(0, aiReply.indexOf("\""));
+                            
+                            // جاوا اسکیپ کریکٹرز کی صفائی
+                            aiReply = aiReply.replace("\\\\n", " ").replace("\\\"", "\"");
+                            tts.speak(aiReply, TextToSpeech.QUEUE_FLUSH, null, null);
+                        }
+                    } catch (Exception e) {
+                        tts.speak("سسٹم نیٹ ورک چیک کریں اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
+                    }
+                }).start();
+            }
+
+            @Override
+            public IBinder onBind(Intent intent) { return null; }
+        }
+        EOF
+
+        # نوٹیفکیشن الرٹ انجن
+        mkdir -p app/src/main/java/com/myra/assistant
+        cat <<EOF > app/src/main/java/com/myra/assistant/MyraNotificationListener.java
+        package com.myra.assistant;
+
+        import android.service.notification.NotificationListenerService;
+        import android.service.notification.StatusBarNotification;
+        import android.speech.tts.TextToSpeech;
+        import java.util.Locale;
+
+        public class MyraNotificationListener extends NotificationListenerService {
+            private TextToSpeech tts;
+
+            @Override
+            public void onCreate() {
+                super.onCreate();
+                tts = new TextToSpeech(this, status -> {
+                    if (status == TextToSpeech.SUCCESS) {
+                        tts.setLanguage(new Locale("ur", "PK"));
                     }
                 });
             }
 
-            // Pulse Animation Logic for Futuristic Aura UI
-            private void startAuraAnimation(float from, float to, int repeatCount) {
-                ScaleAnimation pulse = new ScaleAnimation(
-                        from, to, from, to,
-                        Animation.RELATIVE_TO_SELF, 0.5f,
-                        Animation.RELATIVE_TO_SELF, 0.5f
-                );
-                pulse.setDuration(600);
-                pulse.setRepeatMode(Animation.REVERSE);
-                pulse.setRepeatCount(repeatCount);
-                auraGlow.startAnimation(pulse);
-            }
-
-            // Processing Prompt commands with custom responses
-            private void processCustomPrompt(String command) {
-                String response = "";
-                String lowerCommand = command.toLowerCase();
-
-                if (lowerCommand.contains("hello") || lowerCommand.contains("سلام")) {
-                    response = "وعلیکم السلام اشفاق بھائی! فرمائیے، مائرہ حاضر ہے۔";
-                } else if (lowerCommand.contains("kaun ho") || lowerCommand.contains("who are you")) {
-                    response = "میں مائرhe ہوں، آپ کی پرسنل ایڈوانسڈ اے آئی اسسٹنٹ۔";
-                } else if (lowerCommand.contains("theek ho") || lowerCommand.contains("how are you")) {
-                    response = "الحمدللہ اشfaq بھائی، میں بالکل ٹھیک۔ آپ سنائیں؟";
-                } else {
-                    response = "Ji Ishfaq Bhai, maine suna: \"" + command + "\". Is feature par kaam chal raha hai.";
-                }
-
-                statusText.setText("MYRA: " + response);
-                speak(response);
-                
-                // Animate aura while speaking response
-                startAuraAnimation(1.0f, 1.2f, 4);
-            }
-
-            private void speak(String text) {
-                if (tts != null) {
-                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
-                }
-            }
-
             @Override
-            protected void onDestroy() {
-                if (speechRecognizer != null) speechRecognizer.destroy();
-                if (tts != null) {
-                    tts.stop();
-                    tts.shutdown();
+            public void onNotificationPosted(StatusBarNotification sbn) {
+                String pack = sbn.getPackageName();
+                android.app.Bundle extras = sbn.getNotification().extras;
+                String title = extras.getString("android.title");
+
+                if (title != null && !pack.contains("com.myra.assistant")) {
+                    String msg = "اشفاق بھائی، نیا نوٹیفکیشن آیا ہے۔";
+                    if (pack.contains("whatsapp")) {
+                        msg = "اشفاق بھائی، واٹس ایپ پر " + title + " کا میسج آیا ہے۔";
+                    } else if (pack.contains("telecom") || pack.contains("dialer")) {
+                        msg = "اشفاق بھائی، " + title + " کی کال آ رہی ہے۔";
+                    }
+                    tts.speak(msg, TextToSpeech.QUEUE_ADD, null, null);
                 }
-                super.onDestroy();
             }
         }
         EOF
