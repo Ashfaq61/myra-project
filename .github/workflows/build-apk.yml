@@ -20,7 +20,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Create Complete Project Structure
+      - name: Create Project Structure
         run: |
           mkdir -p app/src/main/java/com/myra/assistant
           mkdir -p app/src/main/res/values
@@ -29,12 +29,10 @@ jobs:
           mkdir -p app/src/main/res/anim
           mkdir -p gradle/wrapper
 
-      - name: Create All Gradle Files
+      - name: Create Gradle Files
         run: |
-          # local.properties
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # gradle.properties
           cat <<'PROPS' > gradle.properties
           org.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8
           android.useAndroidX=true
@@ -42,7 +40,6 @@ jobs:
           org.gradle.daemon=false
           PROPS
 
-          # settings.gradle
           cat <<'SETTINGS' > settings.gradle
           pluginManagement {
               repositories {
@@ -62,14 +59,12 @@ jobs:
           include ':app'
           SETTINGS
 
-          # Root build.gradle
           cat <<'ROOT' > build.gradle
           plugins {
               id 'com.android.application' version '8.2.0' apply false
           }
           ROOT
 
-          # App build.gradle
           cat <<'APP' > app/build.gradle
           plugins {
               id 'com.android.application'
@@ -105,9 +100,8 @@ jobs:
           }
           APP
 
-      - name: Create Resource Files
+      - name: Create Resources
         run: |
-          # strings.xml
           cat <<'EOF' > app/src/main/res/values/strings.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
@@ -115,7 +109,6 @@ jobs:
           </resources>
           EOF
 
-          # colors.xml
           cat <<'EOF' > app/src/main/res/values/colors.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
@@ -123,7 +116,6 @@ jobs:
           </resources>
           EOF
 
-          # styles.xml
           cat <<'EOF' > app/src/main/res/values/styles.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
@@ -134,7 +126,7 @@ jobs:
           </resources>
           EOF
 
-      - name: Create Animation Files
+      - name: Create Animations
         run: |
           cat <<'EOF' > app/src/main/res/anim/pulse_animation.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -151,7 +143,7 @@ jobs:
               android:duration="500" android:fromAlpha="0.0" android:toAlpha="1.0" />
           EOF
 
-      - name: Create Drawable Files
+      - name: Create Drawables
         run: |
           cat <<'EOF' > app/src/main/res/drawable/glow_circle.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -190,7 +182,7 @@ jobs:
           </shape>
           EOF
 
-      - name: Create Layout File
+      - name: Create Layout
         run: |
           cat <<'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -254,7 +246,7 @@ jobs:
           </RelativeLayout>
           EOF
 
-      - name: Create AndroidManifest.xml
+      - name: Create Manifest
         run: |
           cat <<'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -634,7 +626,7 @@ jobs:
           }
           EOF
 
-      - name: Download Gradle Wrapper
+      - name: Setup Gradle Wrapper
         run: |
           curl -L -o gradle/wrapper/gradle-wrapper.jar \
             https://raw.githubusercontent.com/gradle/gradle/v8.2.0/gradle/wrapper/gradle-wrapper.jar
