@@ -26,13 +26,13 @@ jobs:
 
         echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-        cat <<EOF > gradle.properties
+        cat << 'EOF' > gradle.properties
         org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
         android.useAndroidX=true
         android.enableJetifier=true
         EOF
 
-        cat <<EOF > settings.gradle
+        cat << 'EOF' > settings.gradle
         pluginManagement {
             repositories {
                 google()
@@ -51,13 +51,13 @@ jobs:
         include ':app'
         EOF
 
-        cat <<EOF > build.gradle
+        cat << 'EOF' > build.gradle
         plugins {
             id 'com.android.application' version '8.2.0' apply false
         }
         EOF
 
-        cat <<EOF > app/build.gradle
+        cat << 'EOF' > app/build.gradle
         plugins {
             id 'com.android.application'
         }
@@ -86,7 +86,7 @@ jobs:
         }
         EOF
 
-        cat <<EOF > app/src/main/AndroidManifest.xml
+        cat << 'EOF' > app/src/main/AndroidManifest.xml
         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:tools="http://tools.github.com/apk/res/tools">
             
@@ -126,8 +126,7 @@ jobs:
         </manifest>
         EOF
 
-        # خوبصورت نیون چمکتا ہوا دائرہ (Aura Shape)
-        cat <<EOF > app/src/main/res/drawable/glow_circle.xml
+        cat << 'EOF' > app/src/main/res/drawable/glow_circle.xml
         <?xml version="1.0" encoding="utf-8"?>
         <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
             <gradient
@@ -140,18 +139,16 @@ jobs:
         </shape>
         EOF
 
-        # مائیک بٹن بیک گراؤنڈ
-        cat <<EOF > app/src/main/res/drawable/mic_bg.xml
+        cat << 'EOF' > app/src/main/res/drawable/mic_bg.xml
         <?xml version="1.0" encoding="utf-8"?>
-        <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+        <shape xmlns:android="http://shapes.android.com/apk/res/android" android:shape="oval">
             <solid android:color="#1A1A22"/>
             <stroke android:width="2dp" android:color="#00E5FF"/>
             <size android:width="90dp" android:height="90dp"/>
         </shape>
         EOF
 
-        # مکمل نیون ہائی ٹیک لے آؤٹ
-        cat <<EOF > app/src/main/res/layout/activity_main.xml
+        cat << 'EOF' > app/src/main/res/layout/activity_main.xml
         <?xml version="1.0" encoding="utf-8"?>
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
@@ -209,7 +206,7 @@ jobs:
         </RelativeLayout>
         EOF
 
-        cat <<EOF > app/src/main/java/com/myra/assistant/MainActivity.java
+        cat << 'EOF' > app/src/main/java/com/myra/assistant/MainActivity.java
         package com.myra.assistant;
 
         import android.app.Activity;
@@ -249,7 +246,7 @@ jobs:
         }
         EOF
 
-        cat <<EOF > app/src/main/java/com/myra/assistant/MyraBackgroundService.java
+        cat << 'EOF' > app/src/main/java/com/myra/assistant/MyraBackgroundService.java
         package com.myra.assistant;
 
         import android.app.Notification;
@@ -372,15 +369,12 @@ jobs:
                 }
             }
 
-            // جدید سکیور نیٹ ورک انجن (Volley Engine) جو کریش اور بلڈ فیل کو ہمیشہ کے لیے ختم کر دے گا
             private void queryGeminiVolley(String userPrompt) {
                 String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + GEMINI_API_KEY;
 
                 try {
-                    String systemInstruction = "You are MYRA, a super-smart personal AI assistant created by Ishfaq Bhai. Speak politely in Urdu/English mix. Keep answers short.";
-                    
                     JSONObject textObj = new JSONObject();
-                    textObj.put("text", systemInstruction + " User says: " + userPrompt);
+                    textObj.put("text", "You are MYRA, a smart assistant by Ishfaq Bhai. Reply politely in short Urdu. User query: " + userPrompt);
 
                     JSONArray partsArray = new JSONArray();
                     partsArray.put(textObj);
@@ -407,18 +401,18 @@ jobs:
                                     tts.speak(aiReply, TextToSpeech.QUEUE_FLUSH, null, null);
                                 }
                             } catch (Exception e) {
-                                if (tts != null) tts.speak("ڈیٹا پروسیسنگ کا مسئلہ ہے اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
+                                if (tts != null) tts.speak("دوبارہ بولیں اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
                             }
                         },
                         error -> {
-                            if (tts != null) tts.speak("لائیو کنکشن کا مسئلہ ہے اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
+                            if (tts != null) tts.speak("انٹرنیٹ کنکشن چیک کریں۔", TextToSpeech.QUEUE_FLUSH, null, null);
                         }
                     );
 
                     requestQueue.add(jsonObjectRequest);
 
                 } catch (Exception e) {
-                    if (tts != null) tts.speak("سسٹم انجن ایرر ہے اشفاق بھائی۔", TextToSpeech.QUEUE_FLUSH, null, null);
+                    if (tts != null) tts.speak("سسٹم ایرر ہے۔", TextToSpeech.QUEUE_FLUSH, null, null);
                 }
             }
 
@@ -427,9 +421,7 @@ jobs:
         }
         EOF
 
-        # نوٹیفکیشن الرٹ انجن
-        mkdir -p app/src/main/java/com/myra/assistant
-        cat <<EOF > app/src/main/java/com/myra/assistant/MyraNotificationListener.java
+        cat << 'EOF' > app/src/main/java/com/myra/assistant/MyraNotificationListener.java
         package com.myra.assistant;
 
         import android.service.notification.NotificationListenerService;
